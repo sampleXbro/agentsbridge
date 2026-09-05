@@ -31,7 +31,7 @@ function validGraph(): string {
         },
       },
       topics: { alpha: { summary: 'Alpha topic.' } },
-      triggers: { 't-glob': { kind: 'file_glob', pattern: 'src/**/*.ts' } },
+      triggers: { 't-glob': { kind: 'file_glob', pattern: 'src/seed.ts' } },
     },
     null,
     2,
@@ -44,9 +44,10 @@ function validRootRule(): string {
 
 beforeEach(() => {
   ROOT = mkdtempSync(join(tmpdir(), 'agentsmesh-lessons-lint-'));
-  // Keep validGraph()'s `src/**/*.ts` trigger LIVE so the dead-`file_glob`
+  // Keep validGraph()'s `src/seed.ts` trigger LIVE so the dead-`file_glob`
   // liveness check stays quiet — these tests assert the integrity/heading
-  // diagnostics, not trigger liveness (which has its own unit coverage).
+  // diagnostics, not trigger liveness (which has its own unit coverage). The
+  // pattern is an exact path so BROAD_FILE_GLOB stays quiet too.
   write('src/seed.ts', 'export {};\n');
 });
 

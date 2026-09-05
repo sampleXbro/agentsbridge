@@ -17,6 +17,7 @@ import {
 import { collectLowSignalKeywords, collectStopwordKeywords } from './validate-keywords.js';
 import {
   collectBroadCommandPatterns,
+  collectBroadFileGlobs,
   collectDeadFileGlobs,
   collectRunnerAnchoredPatterns,
 } from './validate-liveness.js';
@@ -79,6 +80,7 @@ export function validateLessonsGraph(
   collectStopwordKeywords(graph, findings);
   collectRunnerAnchoredPatterns(graph, findings);
   collectBroadCommandPatterns(graph, findings);
+  collectBroadFileGlobs(graph, findings);
   if (options.knownPaths !== undefined) collectDeadFileGlobs(graph, findings, options.knownPaths);
 
   const ok = findings.every((f) => f.level !== 'error');

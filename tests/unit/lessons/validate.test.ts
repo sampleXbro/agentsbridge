@@ -16,7 +16,7 @@ function baseGraph(): LessonsGraph {
       },
     },
     topics: { t: { summary: 'Topic.' } },
-    triggers: { 't-glob': { kind: 'file_glob', pattern: 'src/**' } },
+    triggers: { 't-glob': { kind: 'file_glob', pattern: 'src/lessons/*.ts' } },
   };
 }
 
@@ -328,7 +328,7 @@ describe('validateLessonsGraph', () => {
     const g = baseGraph();
     // Two distinct ids for the same (kind, pattern) — only possible via a
     // low-level/hand-edit; `add` is content-addressed and cannot create this.
-    g.triggers['t-glob-dup'] = { kind: 'file_glob', pattern: 'src/**' };
+    g.triggers['t-glob-dup'] = { kind: 'file_glob', pattern: 'src/lessons/*.ts' };
     g.lessons['a-rule'].triggers = ['t-glob', 't-glob-dup'];
     const r = validateLessonsGraph(g);
     const dups = r.findings.filter((f) => f.code === 'DUPLICATE_TRIGGER');

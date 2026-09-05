@@ -1,3 +1,4 @@
+import { isBroadFileGlob } from './glob-breadth.js';
 import picomatch from 'picomatch';
 import { isBroadCommandPattern } from './command-pattern-breadth.js';
 import type { LessonsGraph } from './graph-schema.js';
@@ -107,6 +108,28 @@ export function collectRunnerAnchoredPatterns(
  * (BROAD_COMMAND_PATTERN, exit 2); this is the `validate` counterpart for a
  * graph built before that guardrail existed (or a hand-edit). Warn-only.
  */
+/**
+ * A `file_glob` that covers most of the tree fires on nearly every edit, so it
+ * crowds out the rule written about the file actually being touched once the
+ * recall token budget bites. Warn-only and never blocking: a deliberate
+ * file-CLASS trigger is the documented way to state general behaviour, and only
+ * genuinely repo-wide patterns are reported.
+ */
+export function collectBroadFileGlobs(graph: LessonsGraph, findings: ValidationFinding[]): void {
+  const active = activeTriggerIds(graph);
+  for (const [triggerId, trigger] of Object.entries(graph.triggers)) {
+    if (trigger.kind !== 'file_glob') continue;
+    if (!active.has(triggerId)) continue;
+    if (!isBroadFileGlob(trigger.pattern)) continue;
+    findings.push({
+      level: 'warning',
+      code: 'BROAD_FILE_GLOB',
+      message: `file_glob trigger "${triggerId}" (${trigger.pattern}) matches most of the repository, so it outranks nothing and crowds the recall budget. Narrow it to the directory or file class the rule is really about, or detach it with \`lessons untrigger\`.`,
+      triggerId,
+    });
+  }
+}
+
 export function collectBroadCommandPatterns(
   graph: LessonsGraph,
   findings: ValidationFinding[],

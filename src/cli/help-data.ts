@@ -311,6 +311,20 @@ export const COMMANDS: HelpCommand[] = [
       { name: '--top <n>', description: 'query: keep the top n ranked matches (default 10)' },
       { name: '--all', description: 'query: return every match (no cap)' },
       { name: '--max-tokens <n>', description: 'query: cap results by cumulative rule-token cost' },
+      {
+        name: '--always',
+        description: 'query: include always-on lessons (scope: always) in the result',
+      },
+      {
+        name: '--session <id>|auto',
+        description:
+          'query: suppress lessons already delivered in this session (auto derives the key)',
+      },
+      {
+        name: '--no-dedup',
+        description: 'query: re-show lessons the session dedup would suppress',
+      },
+      { name: '--ids', description: 'query: print only the matching lesson ids' },
       { name: '--rule "<text>"', description: 'add: imperative rule (required)' },
       { name: '--topic <id>', description: 'add: topic id (required; use --new-topic for new)' },
       {
@@ -334,6 +348,10 @@ export const COMMANDS: HelpCommand[] = [
         description: 'add: optional why-this-matters note stored on the lesson',
       },
       { name: '--new-topic --topic-summary "..."', description: 'add: create a new topic' },
+      {
+        name: '--scope always',
+        description: 'add: always-on lesson delivered on every task, no trigger needed',
+      },
       { name: '--superseded-by <id>', description: 'deprecate: replacement lesson id' },
       {
         name: '--dry-run',

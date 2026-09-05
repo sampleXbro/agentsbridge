@@ -63,6 +63,10 @@ When you run `agentsmesh generate`, the CLI reads `.agentsmesh/`, applies per-ta
   Never edit generated files directly. If you need to customize per-target output, use `agentsmesh.yaml` overrides or frontmatter fields like `targets` in your canonical files.
 </Aside>
 
+## Syntax errors fail loudly
+
+A syntax error in `mcp.json`, `permissions.yaml`, or `hooks.yaml` stops `generate`, `check`, and `lint` with the file path and the parser message, the same way a broken rule frontmatter does. A broken file is never treated as absent, so a stray trailing comma cannot silently drop your MCP servers from every tool. `install` skips a broken file in third-party content and warns instead.
+
 ## What goes in `.gitignore`
 
 AgentsMesh updates `.gitignore` during `init` with these entries:

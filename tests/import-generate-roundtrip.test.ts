@@ -664,7 +664,6 @@ describe('generate: full canonical → all agents produce all supported outputs'
       '.codex/hooks.json',
       '.codex/rules/agentsmesh-permissions.rules',
       'AGENTS.md',
-      'typescript/AGENTS.md',
     ]);
   });
 
@@ -839,7 +838,6 @@ describe('generate: full canonical → all agents produce all supported outputs'
       'AGENTS.md',
       'CLAUDE.md',
       'GEMINI.md',
-      'typescript/AGENTS.md',
     ]);
   });
 });

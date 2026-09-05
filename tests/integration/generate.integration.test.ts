@@ -8,6 +8,7 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { execSync } from 'node:child_process';
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml';
+import { buildCacheKey } from '../../src/config/remote/remote-fetcher.js';
 import { hashFile } from '../../src/utils/crypto/hash.js';
 
 const TEST_DIR = join(tmpdir(), 'am-integration-generate');
@@ -180,7 +181,10 @@ Review current changes for quality and security.`,
     expect(claudeCmd).toContain('Run code review');
     expect(claudeCmd).toContain('allowed-tools');
     expect(claudeCmd).toContain('Review current changes');
-    expect(cursorCmd).toBe('Review current changes for quality and security.');
+    // Cursor command files carry the description as frontmatter so it round-trips.
+    expect(cursorCmd).toBe(
+      '---\ndescription: Run code review\n---\n\nReview current changes for quality and security.',
+    );
   });
 
   it('generates agent files when agents feature enabled', () => {
@@ -852,7 +856,7 @@ extends:
 
   it('merges extends: github: remote uses pre-cached tarball (no network)', () => {
     const cacheDir = join(TEST_DIR, '.am-cache');
-    const cacheKey = 'org--repo--v1.0.0';
+    const cacheKey = buildCacheKey('github', 'org/repo', 'v1.0.0');
     const topDir = 'org-repo-v1.0.0';
     mkdirSync(join(cacheDir, cacheKey, topDir, '.agentsmesh', 'rules'), {
       recursive: true,

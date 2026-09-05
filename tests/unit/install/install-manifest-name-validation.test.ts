@@ -73,8 +73,8 @@ describe('readInstallManifest — defense-in-depth', () => {
       ].join('\n'),
     );
 
-    // Malformed manifest → the outer try/catch in readInstallManifest swallows
-    // the parse error and returns []. An attacker cannot weaponize the entry
+    // The row fails validation and is skipped with a warning, so
+    // readInstallManifest returns []. An attacker cannot weaponize the entry
     // because the uninstall planner never sees it.
     const installs = await readInstallManifest(canonicalDir);
     expect(installs).toEqual([]);

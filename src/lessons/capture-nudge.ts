@@ -53,14 +53,24 @@ function escapeRegex(literal: string): string {
 }
 
 /**
+ * The command class as a word-bounded regex: an unanchored `rm` would fire on
+ * `pnpm run format`. A boundary is only meaningful next to a word character.
+ */
+function commandClassPattern(cls: string): string {
+  const lead = /^\w/.test(cls) ? '\\b' : '';
+  const tail = /\w$/.test(cls) ? '\\b' : '';
+  return `${lead}${escapeRegex(cls)}${tail}`;
+}
+
+/**
  * A ready-to-paste trigger flag pre-filled with the failed file/command — a
  * STARTING point, not the answer. The file is the DISCOVERY site; every nudge
  * appends {@link RECURRENCE_SURFACE_HINT} to steer the author to widen it.
  *
  * The command hint is CONCRETE: field graphs starve on command triggers (authors
  * skip a fill-in-the-regex placeholder), so pre-fill the failed command's CLASS
- * (program + subcommand) — it fires on the action, not the exact argv, and
- * `validate` separately warns on over-anchored `^pnpm ...` forms.
+ * (program + subcommand), word-bounded — it fires on the action, not the exact
+ * argv, and `validate` separately warns on over-anchored `^pnpm ...` forms.
  */
 function triggerHint(input: CaptureNudgeInput): string {
   if (input.file !== undefined) return `--trigger-file '${input.file}'`;
@@ -68,7 +78,7 @@ function triggerHint(input: CaptureNudgeInput): string {
     const cls = normalizeCommand(input.command);
     // A class carrying a single quote (a kept quoted-argument fragment like
     // `grep bar'`) would unbalance the pasted shell line — placeholder instead.
-    if (cls.length > 0 && !cls.includes("'")) return `--trigger-cmd '${escapeRegex(cls)}'`;
+    if (cls.length > 0 && !cls.includes("'")) return `--trigger-cmd '${commandClassPattern(cls)}'`;
     return `--trigger-cmd '<regex matching the command>'`;
   }
   return `--trigger-file '<glob>'`;

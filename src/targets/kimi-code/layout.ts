@@ -42,7 +42,8 @@ export const projectLayout: TargetLayout = {
   skillDir: KIMI_CODE_SKILLS_DIR,
   managedOutputs: {
     dirs: [KIMI_CODE_AGENTS_DIR, KIMI_CODE_SKILLS_DIR],
-    files: [KIMI_CODE_ROOT_FILE, KIMI_CODE_NESTED_ROOT_FILE],
+    files: [KIMI_CODE_ROOT_FILE],
+    supersededFiles: [KIMI_CODE_NESTED_ROOT_FILE],
     // Kimi Code's own MCP config, in the same directory as the credential-
     // bearing config.toml this layout already refuses to delete.
     coOwnedFiles: [KIMI_CODE_MCP_FILE],

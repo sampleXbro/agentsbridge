@@ -369,15 +369,30 @@ Installed packs are stored in `.agentsmesh/packs/{name}/` and tracked in `.agent
 
 ```yaml
 # .agentsmesh/installs.yaml
-packs:
+version: 1
+installs:
   - name: shared-rules
     source: github:org/shared-rules@v2.0.0
-    installed: 2026-03-01T10:00:00Z
+    version: v2.0.0
+    source_kind: github
+    features:
+      - rules
+    refreshed_at: 2026-03-01T10:00:00.000Z
+    original_ref: v2.0.0
   - name: team-agents
     source: github:org/repo
+    source_kind: github
+    features:
+      - agents
+    target: claude-code
     path: agents
     as: agents
+    original_ref: main
 ```
+
+Every row carries `name`, `source`, `source_kind` (`github`, `gitlab`, `git`, or `local`), and the `features` it installed. The rest appear only when they apply: `version` and `original_ref` record what was requested versus what it resolved to (a branch stays a branch so `refresh` can advance it), `path` / `paths` narrow the install to a subdirectory, `pick` selects individual entities, `as` and `target` record a manual install's kind and tool, `refreshed_at` stamps the last `refresh`, and `accepted_elevated` lists the hooks, permissions, or MCP artifacts you approved with `--accept-*`. Rows are sorted by name, and the file is stamped with a `# yaml-language-server` schema directive for editor autocomplete (see [JSON schemas](../../reference/json-schemas/)).
+
+If one entry in `installs.yaml` is invalid, agentsmesh keeps the valid entries, warns about the bad one, and carries it through unchanged on rewrite; a file whose YAML cannot be parsed is never rewritten.
 
 <Aside type="tip">
   Commit `.agentsmesh/installs.yaml` but gitignore `.agentsmesh/packs/` if packs are large. Use `agentsmesh install --sync` to restore packs after cloning.
@@ -389,7 +404,7 @@ Every install writes `.agentsmesh-install-manifest.json` next to the pack with t
 
 ## Concurrent-install lock
 
-`.agentsmesh/.install.lock` (mirrored from `.generate.lock`) is acquired at the top of any `install` or `uninstall` run. Concurrent invocations on the same project fail fast with a clear lock-holder error rather than racing on filesystem writes. `--sync` replay holds the same lock across all recursive installs.
+`.agentsmesh/.install.lock` (mirrored from `.generate.lock`) is acquired at the top of any `install` or `uninstall` run. Concurrent invocations on the same project fail fast with a clear lock-holder error rather than racing on filesystem writes. `--sync` replay holds the same lock across all recursive installs. A lock left behind by a crashed process (its PID is gone) is evicted automatically; a lock whose holder is still running is never evicted before six hours.
 
 ## Merge behavior
 

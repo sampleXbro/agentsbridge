@@ -1,7 +1,28 @@
 import { defineConfig } from 'vitest/config';
+import { mkdtempSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+
+/** Cold remote-extends cache per run: a warm developer cache hides a test's network dependency. */
+const REMOTE_CACHE = mkdtempSync(join(tmpdir(), 'agentsmesh-test-cache-'));
 
 export default defineConfig({
   test: {
+    /**
+     * Tests must never depend on the developer's git credentials or a warm
+     * remote cache: a unit test that cloned a private `extends` source passed
+     * locally and failed on every CI runner. These make the suite behave like a
+     * machine with no credentials, so that class of bug reproduces here too.
+     * Local `file://` clones (the ones tests legitimately use) are unaffected.
+     */
+    env: {
+      GIT_TERMINAL_PROMPT: '0',
+      GIT_SSH_COMMAND: 'false',
+      GIT_CONFIG_COUNT: '1',
+      GIT_CONFIG_KEY_0: 'credential.helper',
+      GIT_CONFIG_VALUE_0: '',
+      AGENTSMESH_CACHE: REMOTE_CACHE,
+    },
     testTimeout: 60_000,
     hookTimeout: 10_000,
     include: [
@@ -16,7 +37,8 @@ export default defineConfig({
       provider: 'v8',
       include: ['src/**/*.ts'],
       // `json-summary` feeds scripts/coverage-floor.ts; `lcov` feeds Codecov.
-      reporter: ['text', 'html', 'lcov', 'json-summary'],
+      // `json` keeps coverage-final.json for per-branch triage of floor failures.
+      reporter: ['text', 'html', 'lcov', 'json', 'json-summary'],
       // ─────────────────────────────────────────────────────────────────────
       // Two-tier gate:
       //  1. Aggregate thresholds below (95%) over every included file.

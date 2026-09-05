@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { execSync } from 'node:child_process';
-import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 
@@ -101,7 +101,7 @@ Prefer strict mode.
     expect(claudeSkill).toContain('references/checklist.md');
   });
 
-  it('rewrites codex rule references to the nested typescript/AGENTS.md (no directory-prefixed glob)', () => {
+  it('embeds codex rules without a directory-prefixed glob into the root AGENTS.md (no slug dir)', () => {
     writeFileSync(
       join(testDir, 'agentsmesh.yaml'),
       `version: 1
@@ -133,8 +133,12 @@ Prefer strict mode.
 
     execSync(`node ${CLI_PATH} generate`, { cwd: testDir });
 
-    // globs: ["**/*.ts"] has no directory prefix, so it nests under its own slug directory.
-    expect(readFileSync(join(testDir, 'AGENTS.md'), 'utf-8')).toContain('typescript/AGENTS.md');
+    // globs: ["**/*.ts"] has no directory prefix: Codex only walks real directories, so the
+    // rule is embedded in the root AGENTS.md instead of a `typescript/` dir Codex never loads.
+    const root = readFileSync(join(testDir, 'AGENTS.md'), 'utf-8');
+    expect(root).toContain('Prefer strict mode.');
+    expect(root).not.toContain('typescript/AGENTS.md');
+    expect(existsSync(join(testDir, 'typescript'))).toBe(false);
   });
 
   it('rewrites skill directory references for every target root artifact', () => {

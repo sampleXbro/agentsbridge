@@ -90,6 +90,26 @@ describe('renderLessons — query', () => {
     });
     expect(output.stdout()).toMatch(/no matches/i);
   });
+
+  it('names a fully-deduped recall instead of a bare "(no matches)" (plain + md)', () => {
+    for (const format of ['plain', 'md'] as const) {
+      renderLessons({
+        subcommand: 'query',
+        exitCode: 0,
+        format,
+        data: {
+          lessons: [],
+          query: { file: 'src/x.ts' },
+          autoMigrated: false,
+          totalMatches: 3,
+          suppressed: 3,
+        },
+      });
+      expect(output.stdout()).toContain('(no new matches: 3 already shown this session)');
+      expect(output.stdout()).not.toContain('(no matches)');
+      expect(output.stderr()).toMatch(/3 already shown this session — deduped/);
+    }
+  });
 });
 
 describe('renderLessons — add', () => {

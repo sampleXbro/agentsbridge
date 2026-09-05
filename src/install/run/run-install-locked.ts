@@ -29,6 +29,8 @@ export type { InstallCommandResult };
 
 export interface RunInstallLockedArgs {
   args: string[];
+  /** Raw flag bag as received; the picker recursion inherits it. */
+  flags: Record<string, string | boolean>;
   projectRoot: string;
   replay: InstallReplayScope | undefined;
   sync: boolean;
@@ -160,6 +162,7 @@ export async function runInstallLocked(opts: RunInstallLockedArgs): Promise<Inst
       useExtends,
       nameOverride,
       replay,
+      flags: opts.flags,
       recurseInstall: opts.recurseInstall,
     });
     if (routed !== null) return routed;

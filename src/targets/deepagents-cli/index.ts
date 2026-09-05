@@ -169,5 +169,6 @@ export const descriptor = {
     },
   },
   buildImportPaths: buildDeepagentsCliImportPaths,
-  detectionPaths: [DEEPAGENTS_CLI_ROOT_FILE, DEEPAGENTS_CLI_MCP_FILE],
+  // `.mcp.json` is co-owned with claude-code (agentsmesh writes it), so it must not enroll this target.
+  detectionPaths: [DEEPAGENTS_CLI_ROOT_FILE],
 } satisfies TargetDescriptor;

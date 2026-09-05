@@ -8,6 +8,7 @@ import { dirname, join } from 'node:path';
 import { tmpdir } from 'node:os';
 import * as tar from 'tar';
 import {
+  buildCacheKey,
   parseGithubSource,
   fetchRemoteExtend,
   getCacheDir,
@@ -196,7 +197,7 @@ describe('fetchRemoteExtend', () => {
     const tarball = join(CACHE_ROOT, 'mock-offline.tar.gz');
     await tar.c({ file: tarball, gzip: true, cwd: srcDir }, ['org-ext-v2.0.0']);
 
-    const cacheKey = 'org--ext--v2.0.0';
+    const cacheKey = buildCacheKey('github', 'org/ext', 'v2.0.0');
     const extractDir = join(CACHE_ROOT, cacheKey);
     mkdirSync(extractDir, { recursive: true });
     await tar.x({ file: tarball, cwd: extractDir });
@@ -248,7 +249,7 @@ describe('fetchRemoteExtend', () => {
   });
 
   it('uses cached copy when fetch throws but cache exists (mocked exists)', async () => {
-    const cacheKey = 'org--fallback--v1.0.0';
+    const cacheKey = buildCacheKey('github', 'org/fallback', 'v1.0.0');
     const extractDir = join(CACHE_ROOT, cacheKey);
     const topDir = 'org-fallback-abc123';
     const innerDir = join(extractDir, topDir, '.agentsmesh', 'rules');

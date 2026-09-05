@@ -1,5 +1,7 @@
 import type { McpContext } from '../context.js';
 import {
+  BroadCommandPatternError,
+  EmptyRuleError,
   NoTriggerError,
   RuleTooLongError,
   UnknownTopicError,
@@ -123,8 +125,8 @@ export const lessonsHandlers = {
       );
     } catch (err) {
       // Unknown topic is a missing-referent failure → NOT_FOUND. The other
-      // guardrails (no trigger / unrecallable / oversized rule) are capture
-      // rejections → VALIDATION_FAILED. In both cases surface the domain
+      // guardrails (empty/oversized rule, no trigger, unrecallable, broad
+      // command pattern) are capture rejections → VALIDATION_FAILED. In both cases surface the domain
       // machine code in `details.code` so clients keep the precise reason.
       if (err instanceof UnknownTopicError) {
         throw new McpError(
@@ -134,9 +136,11 @@ export const lessonsHandlers = {
         );
       }
       if (
+        err instanceof EmptyRuleError ||
         err instanceof NoTriggerError ||
         err instanceof UnrecallableLessonError ||
-        err instanceof RuleTooLongError
+        err instanceof RuleTooLongError ||
+        err instanceof BroadCommandPatternError
       ) {
         throw new McpError('VALIDATION_FAILED', `lessons_add: ${err.message}`, { code: err.code });
       }

@@ -81,34 +81,42 @@ export const descriptor = {
 
     generateMcp(canonical) {
       if (!canonical.mcp) return [];
-      return [{
-        path: `.rich/mcp.json`,
-        content: JSON.stringify(canonical.mcp, null, 2),
-      }];
+      return [
+        {
+          path: `.rich/mcp.json`,
+          content: JSON.stringify(canonical.mcp, null, 2),
+        },
+      ];
     },
 
     generatePermissions(canonical) {
       if (!canonical.permissions) return [];
-      return [{
-        path: `.rich/permissions.json`,
-        content: JSON.stringify(canonical.permissions, null, 2),
-      }];
+      return [
+        {
+          path: `.rich/permissions.json`,
+          content: JSON.stringify(canonical.permissions, null, 2),
+        },
+      ];
     },
 
     generateHooks(canonical) {
       if (!canonical.hooks) return [];
-      return [{
-        path: `.rich/hooks.json`,
-        content: JSON.stringify(canonical.hooks, null, 2),
-      }];
+      return [
+        {
+          path: `.rich/hooks.json`,
+          content: JSON.stringify(canonical.hooks, null, 2),
+        },
+      ];
     },
 
     generateIgnore(canonical) {
       if (canonical.ignore.length === 0) return [];
-      return [{
-        path: `.richignore`,
-        content: canonical.ignore.join('\n'),
-      }];
+      return [
+        {
+          path: `.richignore`,
+          content: canonical.ignore.join('\n'),
+        },
+      ];
     },
 
     lint(canonical) {
@@ -242,8 +250,15 @@ export const descriptor = {
     // or disabling the `mcp` feature would delete the user's whole config.
     managedOutputs: {
       dirs: ['.rich/rules', '.rich/commands', '.rich/agents', '.rich/skills'],
-      files: ['.richignore', '.rich/ROOT.md', '.rich/hooks.json', '.rich/permissions.json', '.rich/settings.json'],
+      files: [
+        '.richignore',
+        '.rich/ROOT.md',
+        '.rich/hooks.json',
+        '.rich/permissions.json',
+        '.rich/settings.json',
+      ],
       coOwnedFiles: ['.rich/mcp.json'],
+      supersededFiles: ['.rich/LEGACY-ROOT.md'],
     },
     outputFamilies: [
       { id: 'rules', kind: 'primary', pathPrefix: '.rich/rules/' },
@@ -284,17 +299,19 @@ export const descriptor = {
       ignore: 'native',
       permissions: 'native',
     },
-    detectionPaths: [
-      '.rich',
-      '.rich/ROOT.md',
-      '.richignore',
-    ],
+    detectionPaths: ['.rich', '.rich/ROOT.md', '.richignore'],
     layout: {
       rootInstructionPath: '.rich/ROOT.md',
       skillDir: '.rich/skills',
       managedOutputs: {
         dirs: ['.rich/rules', '.rich/commands', '.rich/agents'],
-        files: ['.richignore', '.rich/ROOT.md', '.rich/hooks.json', '.rich/permissions.json', '.rich/settings.json'],
+        files: [
+          '.richignore',
+          '.rich/ROOT.md',
+          '.rich/hooks.json',
+          '.rich/permissions.json',
+          '.rich/settings.json',
+        ],
         coOwnedFiles: ['.rich/mcp.json'],
       },
       outputFamilies: [
@@ -406,13 +423,7 @@ export const descriptor = {
   },
 
   // ──── Detection Paths ──────────────────────────────────────────────────────
-  detectionPaths: [
-    '.rich',
-    '.rich/ROOT.md',
-    '.rich/commands',
-    '.rich/agents',
-    '.richignore',
-  ],
+  detectionPaths: ['.rich', '.rich/ROOT.md', '.rich/commands', '.rich/agents', '.richignore'],
 
   // ──── Lint Rules Callback ──────────────────────────────────────────────────
   lintRules(canonical, _projectRoot, _projectFiles, _options) {

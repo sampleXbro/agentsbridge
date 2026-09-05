@@ -37,13 +37,19 @@ describe('buildCaptureNudge', () => {
 
   it('pre-fills --trigger-cmd with the failed command CLASS, not a placeholder', () => {
     const ctx = buildCaptureNudge({ command: 'git commit -m "wip"' });
-    expect(ctx).toContain("--trigger-cmd 'git commit'");
+    expect(ctx).toContain("--trigger-cmd '\\bgit commit\\b'");
     expect(ctx).not.toContain('<regex matching the command>');
   });
 
   it('escapes regex metacharacters in the derived command class', () => {
     const ctx = buildCaptureNudge({ command: 'foo.bar baz --flag' });
-    expect(ctx).toContain("--trigger-cmd 'foo\\.bar baz'");
+    expect(ctx).toContain("--trigger-cmd '\\bfoo\\.bar baz\\b'");
+  });
+
+  it('wraps the derived class in word boundaries so a short class cannot fire mid-word', () => {
+    // An unanchored `rm` would fire on `pnpm run format`.
+    const ctx = buildCaptureNudge({ command: 'rm -rf build' });
+    expect(ctx).toContain("--trigger-cmd '\\brm\\b'");
   });
 
   it('keeps the placeholder for a command with no derivable class', () => {
@@ -52,11 +58,11 @@ describe('buildCaptureNudge', () => {
   });
 
   it('falls back to the placeholder when the class carries a quote fragment', () => {
-    // `grep -r 'foo bar' src` normalizes to the class `grep bar'` — embedding
-    // that in the pre-filled shell line would leave an unbalanced quote.
-    const ctx = buildCaptureNudge({ command: "grep -r 'foo bar' src" });
+    // `grep foo' src` normalizes to the class `grep foo'` — embedding that in
+    // the pre-filled shell line would leave an unbalanced quote.
+    const ctx = buildCaptureNudge({ command: "grep foo' src" });
     expect(ctx).toContain("--trigger-cmd '<regex matching the command>'");
-    expect(ctx).not.toContain("bar'");
+    expect(ctx).not.toContain("foo'");
   });
 
   it('states the rule shape that makes lessons worth reading', () => {

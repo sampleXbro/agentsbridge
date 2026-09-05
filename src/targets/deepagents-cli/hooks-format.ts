@@ -18,7 +18,7 @@
  * silently narrow when a canonical hook actually runs.
  */
 
-import { BEST_EFFORT_HOOK_EVENTS } from '../../core/hook-types.js';
+import { isBestEffortHookEvent } from '../../core/hook-types.js';
 import type { HookEntry, Hooks } from '../../core/types.js';
 import { getHookText, hasHookText } from '../../core/hook-command.js';
 
@@ -47,8 +47,8 @@ export interface DeepagentsHook {
 
 /**
  * Canonical event names Deep Agents cannot represent — dropped on generate.
- * Excludes BEST_EFFORT_HOOK_EVENTS (agentsmesh-injected recall/capture
- * events): dropping one is not user data loss.
+ * Excludes BEST_EFFORT_HOOK_EVENTS while they carry only the agentsmesh-injected
+ * recall hook: dropping that is not user data loss.
  */
 export function unmappedDeepagentsHookEvents(hooks: Hooks): string[] {
   return Object.keys(hooks).filter(
@@ -56,7 +56,7 @@ export function unmappedDeepagentsHookEvents(hooks: Hooks): string[] {
       Array.isArray(hooks[event]) &&
       (hooks[event] as HookEntry[]).length > 0 &&
       !(event in CANONICAL_TO_DEEPAGENTS) &&
-      !BEST_EFFORT_HOOK_EVENTS.has(event),
+      !isBestEffortHookEvent(event, hooks[event]),
   );
 }
 

@@ -77,6 +77,13 @@ export interface TargetManagedOutputs {
    * that do write it. A path belongs to exactly one of the two lists.
    */
   coOwnedFiles?: readonly string[];
+  /**
+   * Alternate instruction locations the primary root replaces (a pre-migration
+   * `.claude/CLAUDE.md`, a nested `.kimi-code/AGENTS.md`). Evicted whenever a
+   * run emits the primary root instruction, even without lock provenance, so
+   * the tool never loads the same rules twice. Left alone otherwise.
+   */
+  supersededFiles?: readonly string[];
 }
 
 export interface TargetLayout {

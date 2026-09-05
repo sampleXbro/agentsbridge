@@ -165,11 +165,18 @@
           "shouldNotRetrieve": ["l-build", "l-stop"]
         },
         {
-          "id": "explicit-keyword-is-substring",
-          "description": "Explicit --keyword uses substring match: 'build' fires on 'rebuilding'.",
-          "query": { "keyword": "rebuilding system first" },
+          "id": "explicit-keyword-is-token-run",
+          "description": "Explicit --keyword matches whole tokens: 'build' fires on 'build the system first'.",
+          "query": { "keyword": "build the system first" },
           "shouldRetrieve": ["l-build"],
           "shouldNotRetrieve": ["l-readonly", "l-stop"]
+        },
+        {
+          "id": "explicit-keyword-is-not-substring",
+          "description": "Explicit --keyword is NOT a substring match: 'build' must not fire mid-word on 'rebuilding'.",
+          "query": { "keyword": "rebuilding system first" },
+          "shouldRetrieve": [],
+          "shouldNotRetrieve": ["l-readonly", "l-build", "l-stop"]
         },
         {
           "id": "stopword-only-pattern-never-matches",

@@ -1,3 +1,5 @@
+import { RECALL_HOOK_COMMAND } from '../lessons/recall-hook-scaffold.js';
+
 /** Hook definition */
 export interface HookEntry {
   matcher: string;
@@ -27,6 +29,23 @@ export const BEST_EFFORT_HOOK_EVENTS: ReadonlySet<string> = new Set([
   'PostToolUseFailure',
   'SessionStart',
 ]);
+
+/**
+ * True only while a best-effort event carries nothing but the injected recall
+ * hook. A user-authored command under the same event IS data the target drops,
+ * so that event must still be linted like any other unmapped one.
+ */
+export function isBestEffortHookEvent(event: string, entries: unknown): boolean {
+  if (!BEST_EFFORT_HOOK_EVENTS.has(event)) return false;
+  if (!Array.isArray(entries)) return true;
+  return entries.every(
+    (entry) =>
+      typeof entry === 'object' &&
+      entry !== null &&
+      typeof (entry as { command?: unknown }).command === 'string' &&
+      (entry as { command: string }).command.includes(RECALL_HOOK_COMMAND),
+  );
+}
 
 export interface Hooks {
   PreToolUse?: HookEntry[];

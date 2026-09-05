@@ -81,11 +81,10 @@ deny:
     expect(result).toBeNull();
   });
 
-  it('returns null for malformed YAML', async () => {
+  it('rejects for malformed YAML', async () => {
     const path = join(TEST_DIR, 'permissions.yaml');
     writeFileSync(path, 'allow: [broken: yaml');
-    const result = await parsePermissions(path);
-    expect(result).toBeNull();
+    await expect(parsePermissions(path)).rejects.toMatchObject({ code: 'AM_CONFIG_INVALID' });
   });
 
   it('filters non-string entries in allow/deny', async () => {

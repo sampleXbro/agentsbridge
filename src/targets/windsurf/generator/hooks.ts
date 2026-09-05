@@ -1,25 +1,11 @@
-import type { CanonicalFiles } from '../../../core/types.js';
+import type { CanonicalFiles, Hooks } from '../../../core/types.js';
 import { getHookCommand, getHookPrompt, hasHookText } from '../../../core/hook-command.js';
 import { WINDSURF_HOOKS_FILE } from '../constants.js';
+import { windsurfEventName } from '../hook-events.js';
 import type { RulesOutput } from './types.js';
 
-function windsurfEventName(event: string): string {
-  const explicit: Record<string, string> = {
-    PreToolUse: 'pre_tool_use',
-    PostToolUse: 'post_tool_use',
-    Notification: 'notification',
-    UserPromptSubmit: 'user_prompt_submit',
-    SubagentStart: 'subagent_start',
-    SubagentStop: 'subagent_stop',
-  };
-  if (explicit[event]) return explicit[event];
-  return event
-    .replace(/([a-z0-9])([A-Z])/g, '$1_$2')
-    .replace(/[-\s]+/g, '_')
-    .toLowerCase();
-}
-
-function toWindsurfHooks(hooks: import('../../../core/types.js').Hooks): Record<string, unknown> {
+/** Windsurf hook entries carry no matcher: every hook runs on each event occurrence. */
+function toWindsurfHooks(hooks: Hooks): Record<string, unknown> {
   const result: Record<string, unknown> = {};
   for (const [event, entries] of Object.entries(hooks)) {
     if (!Array.isArray(entries)) continue;

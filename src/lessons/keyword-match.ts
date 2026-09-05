@@ -9,8 +9,9 @@ import { tokenize } from './ranking-text.js';
  * the graph: a keyword trigger also matches when its tokens appear as a
  * contiguous run in the file-path + command tokens the recall already carries.
  *
- * Matching is on token boundaries — NOT substring — so "cat" cannot fire on
- * "category" and a multi-word pattern must appear adjacently. The PATTERN is run
+ * Matching is on token boundaries — NOT substring — on BOTH paths, so "cat"
+ * cannot fire on "category", "art" cannot fire on "start", and a multi-word
+ * pattern must appear adjacently. The PATTERN is run
  * through the shared {@link tokenize} (lowercase, split on non-alphanumerics,
  * drop <2-char tokens and stopwords), so a degenerate pattern like "a" or "the"
  * tokenizes to nothing and never matches. The HAYSTACK is split but NOT filtered,
@@ -36,8 +37,7 @@ function deriveHaystackTokens(query: LessonsQuery): string[] {
   if (query.command !== undefined) parts.push(query.command);
   if (parts.length === 0) return [];
   const out: string[] = [];
-  for (const raw of parts.join(' ').split(/[^A-Za-z0-9]+/)) {
-    if (raw.length === 0) continue;
+  for (const raw of splitTokens(parts.join(' '))) {
     out.push(raw.toLowerCase());
     const sub = raw
       .replace(/([a-z0-9])([A-Z])/g, '$1 $2') // camelCase / digit→Upper boundary
@@ -48,6 +48,11 @@ function deriveHaystackTokens(query: LessonsQuery): string[] {
     if (sub.length > 1) out.push(...sub);
   }
   return out;
+}
+
+/** Split on non-alphanumerics, keeping every word (stopwords included). Not lowercased. */
+function splitTokens(text: string): string[] {
+  return text.split(/[^A-Za-z0-9]+/).filter((t) => t.length > 0);
 }
 
 /** True when `needle` appears as a contiguous run inside `hay`. */
@@ -67,10 +72,14 @@ function containsRun(needle: readonly string[], hay: readonly string[]): boolean
 }
 
 export function keywordMatches(pattern: string, query: LessonsQuery): boolean {
-  // 1. Explicit --keyword: byte-identical to the original substring behavior.
-  if (query.keyword !== undefined && query.keyword.toLowerCase().includes(pattern.toLowerCase())) {
+  const needle = tokenize(pattern);
+  // 1. Explicit --keyword, as a contiguous token-run (never a mid-word substring).
+  if (
+    query.keyword !== undefined &&
+    containsRun(needle, splitTokens(query.keyword.toLowerCase()))
+  ) {
     return true;
   }
   // 2. Derived from file + command, on token boundaries.
-  return containsRun(tokenize(pattern), deriveHaystackTokens(query));
+  return containsRun(needle, deriveHaystackTokens(query));
 }

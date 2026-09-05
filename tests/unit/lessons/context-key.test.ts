@@ -5,6 +5,9 @@ describe('normalizeCommand — reduce a command to its stable class', () => {
   it('keeps program + subcommand, drops flags and quoted args', () => {
     expect(normalizeCommand("git commit -m 'wip'")).toBe('git commit');
     expect(normalizeCommand('npm run test --watch')).toBe('npm run');
+    // Past a flag a bare word is an operand, not a subcommand.
+    expect(normalizeCommand('rm -rf build')).toBe('rm');
+    expect(normalizeCommand('rm -rf dist')).toBe(normalizeCommand('rm -rf build'));
   });
   it('drops path-like tokens', () => {
     expect(normalizeCommand('tsc --noEmit src/x.ts')).toBe('tsc');

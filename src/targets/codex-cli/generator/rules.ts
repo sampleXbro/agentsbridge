@@ -45,6 +45,11 @@ function eligibleAdvisoryRules(canonical: CanonicalFiles): CanonicalRule[] {
   });
 }
 
+/** Unscoped default-variant rules: no real directory, so they embed in the root `AGENTS.md`. */
+function isRootEmbedded(rule: CanonicalRule): boolean {
+  return codexNestedAgentsPath(rule) === AGENTS_MD;
+}
+
 /** Groups advisory rules by their resolved nested `AGENTS.md` path, joining bodies that collide. */
 function groupByNestedPath(rules: CanonicalRule[]): Map<string, CanonicalRule[]> {
   const groups = new Map<string, CanonicalRule[]>();
@@ -59,9 +64,12 @@ function groupByNestedPath(rules: CanonicalRule[]): Map<string, CanonicalRule[]>
 
 export function generateRules(canonical: CanonicalFiles): RulesOutput[] {
   const root = canonical.rules.find((r) => r.root);
+  const advisory = eligibleAdvisoryRules(canonical);
   const outputs: RulesOutput[] = [];
+  // Unscoped rules ride along in the root AGENTS.md; without a root rule there is nowhere to embed.
   if (root) {
-    outputs.push({ path: AGENTS_MD, content: root.body.trim() });
+    const content = appendEmbeddedRulesBlock(root.body.trim(), advisory.filter(isRootEmbedded));
+    outputs.push({ path: AGENTS_MD, content });
   }
 
   for (const rule of canonical.rules) {
@@ -79,7 +87,8 @@ export function generateRules(canonical: CanonicalFiles): RulesOutput[] {
     });
   }
 
-  for (const [path, rules] of groupByNestedPath(eligibleAdvisoryRules(canonical))) {
+  const nested = advisory.filter((rule) => !isRootEmbedded(rule));
+  for (const [path, rules] of groupByNestedPath(nested)) {
     const content = rules
       .map((rule) => rule.body.trim())
       .filter((body) => body.length > 0)

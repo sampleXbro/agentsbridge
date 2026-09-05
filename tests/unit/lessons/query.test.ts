@@ -256,3 +256,31 @@ describe('queryLessons', () => {
     expect(r[0]?.lesson.topics).toEqual(['t']);
   });
 });
+
+describe('queryLessons — word-bounded command class (the capture-nudge hint shape)', () => {
+  const bounded: LessonsGraph = {
+    version: 1,
+    lessons: {
+      'rm-rule': {
+        rule: 'R.',
+        topics: ['t'],
+        triggers: ['t-rm'],
+        evidence: [],
+        status: 'active',
+        createdAt: '2026-06-01',
+      },
+    },
+    topics: { t: { summary: 'T.' } },
+    triggers: { 't-rm': { kind: 'command_pattern', pattern: '\\brm\\b' } },
+  };
+
+  it('fires on the command class itself', () => {
+    expect(queryLessons(bounded, { command: 'rm -rf build' }).map((x) => x.id)).toEqual([
+      'rm-rule',
+    ]);
+  });
+
+  it('does not fire when the class is only a mid-word fragment (`pnpm run format`)', () => {
+    expect(queryLessons(bounded, { command: 'pnpm run format' })).toEqual([]);
+  });
+});

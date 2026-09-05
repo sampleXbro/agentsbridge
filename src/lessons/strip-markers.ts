@@ -20,11 +20,13 @@ const LINE_REFS = String.raw`L\d+(?:\s*,\s*L\d+)*`;
  * that precedes it; removing the whole match (replacing with the empty string)
  * leaves surrounding prose spacing intact, whether the marker sits at the end
  * of a clause ("Do X. See L1") or mid-sentence ("First clause (L1, L2), then").
+ * Only the "See L1." sentence form owns its period; a period after "(L5)" or
+ * "[L5]" belongs to the surrounding sentence and is kept.
  */
 const LINE_REF_PATTERNS: readonly RegExp[] = [
   new RegExp(String.raw`\s*\bSee\s+${LINE_REFS}\.?`, 'g'), // " See L128." / " See L140, L149"
-  new RegExp(String.raw`\s*\((?:${LINE_REFS})\)\.?`, 'g'), // " (L174)" / " (L92, L163)"
-  new RegExp(String.raw`\s*\[(?:${LINE_REFS})\]\.?`, 'g'), // " [L161, L208]"
+  new RegExp(String.raw`\s*\((?:${LINE_REFS})\)`, 'g'), // " (L174)" / " (L92, L163)"
+  new RegExp(String.raw`\s*\[(?:${LINE_REFS})\]`, 'g'), // " [L161, L208]"
 ];
 
 /**

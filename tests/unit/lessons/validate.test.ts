@@ -16,7 +16,7 @@ function baseGraph(): LessonsGraph {
       },
     },
     topics: { t: { summary: 'Topic.' } },
-    triggers: { 't-glob': { kind: 'file_glob', pattern: 'src/**' } },
+    triggers: { 't-glob': { kind: 'file_glob', pattern: 'src/lessons/*.ts' } },
   };
 }
 
@@ -328,7 +328,7 @@ describe('validateLessonsGraph', () => {
     const g = baseGraph();
     // Two distinct ids for the same (kind, pattern) — only possible via a
     // low-level/hand-edit; `add` is content-addressed and cannot create this.
-    g.triggers['t-glob-dup'] = { kind: 'file_glob', pattern: 'src/**' };
+    g.triggers['t-glob-dup'] = { kind: 'file_glob', pattern: 'src/lessons/*.ts' };
     g.lessons['a-rule'].triggers = ['t-glob', 't-glob-dup'];
     const r = validateLessonsGraph(g);
     const dups = r.findings.filter((f) => f.code === 'DUPLICATE_TRIGGER');
@@ -441,5 +441,45 @@ describe('validateLessonsGraph', () => {
     const r = validateLessonsGraph(broken);
     expect(r.ok).toBe(false);
     expect(r.findings.some((f) => f.code === 'SCHEMA_INVALID')).toBe(true);
+  });
+});
+
+describe('validateLessonsGraph — BROAD_COMMAND_PATTERN', () => {
+  it('warns on an active command_pattern that matches nearly every command', () => {
+    const g = baseGraph();
+    g.triggers['t-any'] = { kind: 'command_pattern', pattern: '.*' };
+    g.lessons['a-rule']!.triggers.push('t-any');
+    const r = validateLessonsGraph(g);
+    expect(r.ok).toBe(true);
+    expect(r.findings).toContainEqual(
+      expect.objectContaining({
+        level: 'warning',
+        code: 'BROAD_COMMAND_PATTERN',
+        triggerId: 't-any',
+      }),
+    );
+  });
+
+  it('does not warn on a specific command_pattern', () => {
+    const g = baseGraph();
+    g.triggers['t-git'] = { kind: 'command_pattern', pattern: '\\bgit commit\\b' };
+    g.lessons['a-rule']!.triggers.push('t-git');
+    expect(validateLessonsGraph(g).findings.map((f) => f.code)).not.toContain(
+      'BROAD_COMMAND_PATTERN',
+    );
+  });
+
+  it('ignores a broad pattern referenced only by a deprecated lesson', () => {
+    const g = baseGraph();
+    g.triggers['t-any'] = { kind: 'command_pattern', pattern: '.*' };
+    g.lessons['old-rule'] = {
+      ...g.lessons['a-rule']!,
+      rule: 'Old.',
+      triggers: ['t-any'],
+      status: 'deprecated',
+    };
+    expect(validateLessonsGraph(g).findings.map((f) => f.code)).not.toContain(
+      'BROAD_COMMAND_PATTERN',
+    );
   });
 });

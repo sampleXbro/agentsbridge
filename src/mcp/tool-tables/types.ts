@@ -13,5 +13,7 @@ export interface ResourceDescriptor {
   uri: string;
   name: string;
   description: string;
+  /** Validates the template params before `read` runs (same schema as the tool). */
+  inputSchema: z.ZodTypeAny;
   read: (ctx: McpContext, params: Record<string, string>) => Promise<unknown>;
 }

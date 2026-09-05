@@ -1,0 +1,60 @@
+/**
+ * Renderer for `agentsmesh lessons query`. Plain/md output goes to stdout
+ * (paste-clean, one rule per line); every notice — truncation, dedup — goes to
+ * stderr so an agent pasting stdout into its context never picks up chatter.
+ */
+import { logger } from '../../utils/output/logger.js';
+import type { LessonsQueryData, LessonsQueryFormat } from '../commands/lessons-types.js';
+
+export function renderQuery(data: LessonsQueryData, format: LessonsQueryFormat): void {
+  if (data.autoMigrated) {
+    logger.warn('lessons.json was auto-migrated from index.yaml on first invocation.');
+  }
+  if (data.warning !== undefined && data.warning.length > 0) {
+    logger.warn(data.warning);
+  }
+  if (format === 'json') {
+    process.stdout.write(`${JSON.stringify(data, null, 2)}\n`);
+    return;
+  }
+  const suppressed = data.suppressed ?? 0;
+  if (data.lessons.length === 0) {
+    // A fully-deduped recall is not "no matches" — say what was hidden.
+    logger.info(
+      suppressed > 0
+        ? `(no new matches: ${suppressed} already shown this session)`
+        : '(no matches)',
+    );
+    renderSuppressed(suppressed);
+    return;
+  }
+  // `--ids` prefixes each line with the lesson id so an irrelevant recall can be
+  // traced to `show <id>` / `deprecate <id>`. Off by default to keep the plain
+  // output paste-clean and token-lean.
+  const withId = (id: string, rule: string): string =>
+    data.showIds === true ? `[${id}] ${rule}` : rule;
+  if (format === 'md') {
+    data.lessons.forEach((l, i) => logger.info(`${i + 1}. ${withId(l.id, l.rule)}`));
+  } else {
+    for (const l of data.lessons) logger.info(withId(l.id, l.rule));
+  }
+  // Never silently truncate: tell the user (on stderr, keeping stdout paste-clean)
+  // when the ranked cap hid matches.
+  if (data.totalMatches !== undefined && data.totalMatches > data.lessons.length) {
+    // `--top` alone still hits the token budget, so name both knobs (or --all).
+    logger.warn(
+      `(showing ${data.lessons.length} of ${data.totalMatches} matches — raise --top <n> with --max-tokens <m>, or pass --all)`,
+    );
+  }
+  renderSuppressed(suppressed);
+}
+
+/**
+ * Dedup is opt-in via a session id; note when repeats were hidden so the
+ * suppression is never silent (stderr, keeping stdout paste-clean).
+ */
+function renderSuppressed(suppressed: number): void {
+  if (suppressed > 0) {
+    logger.warn(`(${suppressed} already shown this session — deduped; pass --no-dedup to include)`);
+  }
+}

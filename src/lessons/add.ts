@@ -1,20 +1,22 @@
 import { makeLessonId, mergeTriggers, normalizeRule, todayIso, union } from './add-helpers.js';
+import { UnknownTopicError } from './add-errors.js';
 import {
-  NoTriggerError,
-  RuleTooLongError,
-  UnknownTopicError,
-  UnrecallableLessonError,
-} from './add-errors.js';
+  assertRecallable,
+  assertRuleShape,
+  assertTriggerInputs,
+  skipsTriggerGates,
+} from './add-gates.js';
 import type { AutoPruneSummary } from './auto-prune.js';
 import { type GuardrailWarning, inspectCapturedLesson } from './capture-guardrails.js';
 import { nearDuplicateWarning } from './capture-near-duplicate.js';
-import { MAX_RULE_LENGTH, type LessonsGraph } from './graph-schema.js';
+import type { LessonsGraph } from './graph-schema.js';
 import { mutateLessonsGraph } from './mutate.js';
-import { blockingDeadTriggers } from './trigger-effectiveness.js';
 
 // Re-export the capture rejection errors so existing `from './add.js'` importers
 // (CLI/MCP surfacing, tests) keep working after the split into add-errors.ts.
 export {
+  BroadCommandPatternError,
+  EmptyRuleError,
   NoTriggerError,
   RuleTooLongError,
   UnknownTopicError,
@@ -72,14 +74,6 @@ export interface AddLessonResult {
   readonly autoPruned?: AutoPruneSummary;
 }
 
-function countInputTriggers(triggers: AddLessonInput['triggers']): number {
-  return (
-    (triggers.files?.length ?? 0) +
-    (triggers.commands?.length ?? 0) +
-    (triggers.keywords?.length ?? 0)
-  );
-}
-
 export async function addLesson(
   projectRoot: string,
   input: AddLessonInput,
@@ -106,17 +100,11 @@ export function addLessonInto(
   options: AddLessonOptions,
 ): AddLessonResult {
   const ruleKey = normalizeRule(input.rule);
-  const trimmedRule = input.rule.trim();
-  // A rule far longer than one sentence is a malformed capture; block it before
-  // it can bloat every recall that surfaces it (the hook also truncates as a
-  // last-resort defense for already-stored / hostile graphs).
-  if (trimmedRule.length > MAX_RULE_LENGTH) {
-    throw new RuleTooLongError(trimmedRule.length, MAX_RULE_LENGTH);
-  }
+  const trimmedRule = assertRuleShape(input.rule);
   const existingId = findExistingLessonByRule(graph, ruleKey);
 
   // Topic validity is checked first so an unknown-topic / missing-summary error
-  // takes precedence over the trigger guard below (clearer, and stable for the
+  // takes precedence over the trigger gates below (clearer, and stable for the
   // documented exit codes).
   const isNewTopic = graph.topics[input.topic] === undefined;
   if (isNewTopic) {
@@ -127,39 +115,15 @@ export function addLessonInto(
     graph.topics[input.topic] = { summary: options.topicSummary };
   }
 
-  // An ALWAYS-ON lesson (scope:'always') is delivered on every task, not matched
-  // by triggers, so it needs none — skip the trigger gates for it (as legacy-merge
-  // recovery also does).
-  const skipTriggerGates = options.allowNoTrigger === true || input.scope === 'always';
-
-  // A lesson with no trigger can never be recalled. Enforce ≥1 trigger on the
-  // RESULTING lesson (an upsert keeps the existing lesson's triggers, so it may
-  // pass no new ones).
-  if (!skipTriggerGates) {
-    const existingTriggers =
-      existingId !== null ? (graph.lessons[existingId]?.triggers.length ?? 0) : 0;
-    if (countInputTriggers(input.triggers) === 0 && existingTriggers === 0) {
-      throw new NoTriggerError();
-    }
-  }
-
+  // Gates (see add-gates.ts): a throw aborts the transactional write.
+  const existing = existingId !== null ? graph.lessons[existingId] : undefined;
+  assertTriggerInputs(input, options, existing?.triggers.length ?? 0);
   const { triggerIds, newTriggerIds } = mergeTriggers(graph, input.triggers);
-
-  // A lesson whose RESULTING triggers are ALL dead on the mandatory --file/--cmd
-  // recall path is unrecallable — block it (the symmetric, blocking counterpart
-  // to the warn-only guardrails). Computed on the merged set, so an upsert that
-  // adds a dead trigger to an already-effective lesson is fine. command_pattern
-  // deadness is deferred to the write barrier (see blockingDeadTriggers), so this
-  // block adds the keyword-dead case the barrier passes. Skipped for the same
-  // cases as the NoTriggerError check above (legacy-merge, always-on lessons).
-  // A throw here aborts the transactional write, so nothing is persisted.
-  if (!skipTriggerGates) {
-    const resultingTriggers =
-      existingId !== null ? union(graph.lessons[existingId]!.triggers, triggerIds) : triggerIds;
-    const blockingDead = blockingDeadTriggers(graph, resultingTriggers);
-    if (resultingTriggers.length > 0 && blockingDead.length === resultingTriggers.length) {
-      throw new UnrecallableLessonError(blockingDead);
-    }
+  if (!skipsTriggerGates(input, options)) {
+    assertRecallable(
+      graph,
+      existing === undefined ? triggerIds : union(existing.triggers, triggerIds),
+    );
   }
 
   if (existingId !== null) {

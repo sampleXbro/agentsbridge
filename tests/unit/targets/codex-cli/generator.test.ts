@@ -11,6 +11,7 @@ import {
   generateMcp,
 } from '../../../../src/targets/codex-cli/generator.js';
 import type { CanonicalFiles } from '../../../../src/core/types.js';
+import { appendEmbeddedRulesBlock } from '../../../../src/targets/projection/managed-blocks.js';
 import {
   AGENTS_MD,
   CODEX_AGENTS_DIR,
@@ -77,7 +78,7 @@ describe('generateRules (codex-cli)', () => {
     expect(results.find((r) => r.path === '.codex/instructions/_root.md')).toBeUndefined();
   });
 
-  it('nests a scoped rule under its own slug directory when there is no root rule', () => {
+  it('produces no slug directory for an unscoped rule when there is no root AGENTS.md to embed into', () => {
     const canonical = makeCanonical({
       rules: [
         {
@@ -90,10 +91,7 @@ describe('generateRules (codex-cli)', () => {
         },
       ],
     });
-    const results = generateRules(canonical);
-    expect(results).toHaveLength(1);
-    expect(results[0]!.path).toBe('other/AGENTS.md');
-    expect(results[0]!.content).toBe('Other rule');
+    expect(generateRules(canonical)).toEqual([]);
   });
 
   it('nests advisory rules under a real AGENTS.md Codex loads (directory-scoped)', () => {
@@ -127,7 +125,7 @@ describe('generateRules (codex-cli)', () => {
     expect(tsRule!.content).toBe('Use strict mode.');
   });
 
-  it('nests scoped rules under their slug when globs are **/*.ts (no directory prefix)', () => {
+  it('embeds **/*.ts rules (no directory prefix) into the root AGENTS.md instead of a slug dir', () => {
     const canonical = makeCanonical({
       rules: [
         {
@@ -149,9 +147,35 @@ describe('generateRules (codex-cli)', () => {
       ],
     });
     const results = generateRules(canonical);
-    const scoped = results.find((r) => r.path === 'typescript/AGENTS.md');
-    expect(scoped).toBeDefined();
-    expect(scoped!.content).toContain('Strict types.');
+    expect(results.map((r) => r.path)).toEqual([AGENTS_MD]);
+    expect(results[0]!.content).toBe(appendEmbeddedRulesBlock('# Root', [canonical.rules[1]!]));
+    expect(results[0]!.content).toContain('Strict types.');
+  });
+
+  it('writes unscoped override rules to the root AGENTS.override.md, joined', () => {
+    const canonical = makeCanonical({
+      rules: [
+        {
+          source: '/proj/.agentsmesh/rules/a.md',
+          root: false,
+          targets: [],
+          description: '',
+          globs: [],
+          body: 'A',
+          codexInstructionVariant: 'override',
+        },
+        {
+          source: '/proj/.agentsmesh/rules/b.md',
+          root: false,
+          targets: [],
+          description: '',
+          globs: ['**/*.ts'],
+          body: 'B',
+          codexInstructionVariant: 'override',
+        },
+      ],
+    });
+    expect(generateRules(canonical)).toEqual([{ path: 'AGENTS.override.md', content: 'A\n\nB' }]);
   });
 
   it('joins multiple rules that resolve to the same nested AGENTS.md', () => {

@@ -27,6 +27,12 @@ describe('stripLegacyMarkers', () => {
     );
   });
 
+  it('keeps the sentence period that follows a "(L\\d+)" or "[L\\d+]" marker', () => {
+    expect(stripLegacyMarkers('Use CWE-78 (L5).')).toBe('Use CWE-78.');
+    expect(stripLegacyMarkers('Use CWE-78 [L5].')).toBe('Use CWE-78.');
+    expect(stripLegacyMarkers(stripLegacyMarkers('Use CWE-78 (L5).'))).toBe('Use CWE-78.');
+  });
+
   it('removes a trailing bracketed "[L\\d+, L\\d+]" marker', () => {
     expect(stripLegacyMarkers('Use one helper for skill names. [L161, L208]')).toBe(
       'Use one helper for skill names.',

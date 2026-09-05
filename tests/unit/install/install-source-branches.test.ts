@@ -366,7 +366,26 @@ describe('parseInstallSource branches', () => {
         expect(parsed).toEqual({
           kind: 'gitlab',
           rawRef: 'HEAD',
+          org: 'g',
+          repo: 'p',
           gitRemoteUrl: 'https://gitlab.com/g/p.git',
+          pathInRepo: '',
+        });
+      } finally {
+        rmSync(cfg, { recursive: true, force: true });
+      }
+    });
+
+    it('keeps nested-group org and repo for git@gitlab.com SSH URLs', async () => {
+      const cfg = makeTmpCfg();
+      try {
+        const parsed = await parseInstallSource('git@gitlab.com:group/sub/proj.git', cfg);
+        expect(parsed).toEqual({
+          kind: 'gitlab',
+          rawRef: 'HEAD',
+          org: 'group/sub',
+          repo: 'proj',
+          gitRemoteUrl: 'https://gitlab.com/group/sub/proj.git',
           pathInRepo: '',
         });
       } finally {

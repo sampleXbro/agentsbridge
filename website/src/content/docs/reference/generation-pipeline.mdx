@@ -84,10 +84,11 @@ Build the candidate set from every active target's `managedOutputs`: the declare
 
 Two paths are never deleted:
 
+- Any static `managedOutputs.files` entry the lock has no provenance for. AgentsMesh only evicts what it wrote; a hand-authored `AGENTS.md` on a first run stays.
 - Anything in `managedOutputs.coOwnedFiles`. AgentsMesh writes into these files but the user owns them too, so a run that emits nothing for one must leave it alone. The co-owned set is collected across **all** active targets before the sweep, so one target's directory walk cannot reach a file another target co-owns.
 - Anything the current run emitted, which is the expected-path set.
 
-Plugin descriptors are read the same way as built-in ones, so a plugin declaring `coOwnedFiles` gets the same protection.
+The one exception is `managedOutputs.supersededFiles`: alternate instruction locations (a pre-migration `.claude/CLAUDE.md`) that are removed whenever a run emits the primary root instruction, so a tool never loads the same rules twice. Plugin descriptors are read the same way as built-in ones, so a plugin declaring `coOwnedFiles` or `supersededFiles` gets the same treatment.
 
 ---
 

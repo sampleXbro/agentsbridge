@@ -100,7 +100,10 @@ describe('lessonsHandlers.query — session dedup (default on)', () => {
     const stored = JSON.parse(readFileSync(path, 'utf8')) as { seen: Record<string, number> };
     writeFileSync(
       path,
-      JSON.stringify({ v: 2, seen: Object.fromEntries(Object.keys(stored.seen).map((k) => [k, aged])) }),
+      JSON.stringify({
+        v: 2,
+        seen: Object.fromEntries(Object.keys(stored.seen).map((k) => [k, aged])),
+      }),
       'utf8',
     );
     const r3 = await lessonsHandlers.query(ctx, { file: 'src/cli/x.ts' });
@@ -699,5 +702,28 @@ describe('lessonsHandlers — error codes (no IO_ERROR mislabel)', () => {
     );
     expect(err.code).toBe('NOT_FOUND');
     expect(err.message).toMatch(/unknown superseder/i);
+  });
+});
+
+describe('lessonsHandlers.add — rule-shape and breadth rejections', () => {
+  it('whitespace-only rule is VALIDATION_FAILED with EMPTY_RULE machine code', async () => {
+    const err = await captureMcpError(
+      lessonsHandlers.add(ctx, { rule: '   ', topic: 'topic-x', trigger_files: ['src/**/*.ts'] }),
+    );
+    expect(err.code).toBe('VALIDATION_FAILED');
+    expect((err.details as { code?: string }).code).toBe('EMPTY_RULE');
+    expect(err.message).toMatch(/rule must not be empty/i);
+  });
+
+  it('over-broad command pattern is VALIDATION_FAILED with BROAD_COMMAND_PATTERN machine code', async () => {
+    const err = await captureMcpError(
+      lessonsHandlers.add(ctx, {
+        rule: 'Never do the thing.',
+        topic: 'topic-x',
+        trigger_cmd: '.*',
+      }),
+    );
+    expect(err.code).toBe('VALIDATION_FAILED');
+    expect((err.details as { code?: string }).code).toBe('BROAD_COMMAND_PATTERN');
   });
 });

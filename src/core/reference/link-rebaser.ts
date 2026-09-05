@@ -14,6 +14,7 @@ import {
 } from './link-rebaser-helpers.js';
 import { formatLinkPathForDestination, isUnderAgentsMesh } from './link-rebaser-output.js';
 import { resolveLinkTarget } from './link-rebaser-resolution.js';
+import { decodeLinkPath, encodeLinkPath } from './link-uri-encoding.js';
 import {
   isMarkdownLinkDestinationToken,
   isRelativePathToken,
@@ -36,7 +37,6 @@ export interface RewriteFileLinksInput {
   /** For project scope: distinguish directory targets without a trailing slash in the link. */
   pathIsDirectory?: (absolutePath: string) => boolean;
 }
-
 export interface RewriteFileLinksResult {
   content: string;
   missing: string[];
@@ -64,10 +64,11 @@ export function rewriteFileLinks(input: RewriteFileLinksInput): RewriteFileLinks
     if (!punctStripped) return match;
 
     const lineNumMatch = LINE_NUMBER_SUFFIX.exec(punctStripped);
-    const candidate = lineNumMatch ? punctStripped.slice(0, lineNumMatch.index) : punctStripped;
+    const rawCandidate = lineNumMatch ? punctStripped.slice(0, lineNumMatch.index) : punctStripped;
     const lineNumSuffix = lineNumMatch ? lineNumMatch[0] : '';
-    if (!candidate) return match;
-    const tokenContext = getTokenContext(fullContent, offset, offset + candidate.length);
+    if (!rawCandidate) return match;
+    const tokenContext = getTokenContext(fullContent, offset, offset + rawCandidate.length);
+    const candidate = decodeLinkPath(rawCandidate, tokenContext.role);
     if (tokenContext.role !== 'markdown-link-dest' && WINDOWS_ABSOLUTE_PATH.test(candidate)) {
       return match;
     }
@@ -85,7 +86,6 @@ export function rewriteFileLinks(input: RewriteFileLinksInput): RewriteFileLinks
       pathExists: input.pathExists,
     });
     let resolvedBeforeTranslate = initialResolvedBeforeTranslate;
-
     if (!matchedPath || !translatedPath) {
       if (translatedPath) missing.add(translatedPath);
       return match;
@@ -176,7 +176,7 @@ export function rewriteFileLinks(input: RewriteFileLinksInput): RewriteFileLinks
     const forceRelative =
       preferRelativeProseInSameSurface ||
       tokenContext.role === 'markdown-link-dest' ||
-      isMarkdownLinkDestinationToken(fullContent, offset, candidate);
+      isMarkdownLinkDestinationToken(fullContent, offset, rawCandidate);
     const rewritten = formatLinkPathForDestination(
       input.projectRoot,
       input.destinationFile,
@@ -193,7 +193,7 @@ export function rewriteFileLinks(input: RewriteFileLinksInput): RewriteFileLinks
       },
     );
     if (!rewritten) return match;
-    return `${rewritten}${lineNumSuffix}${suffix}`;
+    return `${encodeLinkPath(rewritten, candidate !== rawCandidate)}${lineNumSuffix}${suffix}`;
   });
 
   return { content, missing: [...missing] };

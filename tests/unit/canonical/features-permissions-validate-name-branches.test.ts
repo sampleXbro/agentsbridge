@@ -33,10 +33,10 @@ describe('parsePermissions — branch coverage', () => {
     expect(await parsePermissions(p)).toEqual({ allow: [], deny: [], ask: [] });
   });
 
-  it('returns null when YAML parse fails', async () => {
+  it('rejects when YAML parse fails', async () => {
     const p = join(dir, 'permissions.yaml');
     writeFileSync(p, 'allow:\n  - x\n  invalid yaml: : :\n');
-    expect(await parsePermissions(p)).toBeNull();
+    await expect(parsePermissions(p)).rejects.toMatchObject({ code: 'AM_CONFIG_INVALID' });
   });
 
   it('returns null when parsed YAML is a scalar (string)', async () => {

@@ -20,10 +20,8 @@ import {
   KIRO_STEERING_DIR,
   KIRO_HOOKS_DIR,
 } from '../../../src/targets/kiro/constants.js';
-import {
-  importWindsurfHooks,
-  importWindsurfMcp,
-} from '../../../src/targets/windsurf/importer-hooks-mcp.js';
+import { importWindsurfHooks } from '../../../src/targets/windsurf/importer-hooks.js';
+import { importWindsurfMcp } from '../../../src/targets/windsurf/importer-mcp.js';
 import {
   WINDSURF_HOOKS_FILE,
   WINDSURF_MCP_EXAMPLE_FILE,
@@ -321,7 +319,7 @@ describe('importWindsurfHooks — guard branches', () => {
 // ---------------------------------------------------------------------------
 
 describe('windsurfHooksToCanonical — entry shapes', () => {
-  it("maps top-level shorthand command to matcher='.*' command entry", async () => {
+  it("maps top-level shorthand command to matcher='*' command entry", async () => {
     mkdirSync(join(TEST_DIR, '.windsurf'), { recursive: true });
     writeFileSync(
       join(TEST_DIR, WINDSURF_HOOKS_FILE),
@@ -336,7 +334,7 @@ describe('windsurfHooksToCanonical — entry shapes', () => {
     expect(results.find((r) => r.toPath === '.agentsmesh/hooks.yaml')).toBeDefined();
     const yaml = readFileSync(join(TEST_DIR, '.agentsmesh', 'hooks.yaml'), 'utf-8');
     expect(yaml).toContain('PreToolUse');
-    expect(yaml).toContain('matcher: .*');
+    expect(yaml).toContain('matcher: "*"');
     expect(yaml).toContain('command: echo top-level');
   });
 
@@ -404,7 +402,7 @@ describe('windsurfHooksToCanonical — entry shapes', () => {
     expect(parsed.PreToolUse).toHaveLength(1);
   });
 
-  it('passes through unmapped hook event names unchanged', async () => {
+  it('drops hook events agentsmesh has no canonical name for', async () => {
     mkdirSync(join(TEST_DIR, '.windsurf'), { recursive: true });
     writeFileSync(
       join(TEST_DIR, WINDSURF_HOOKS_FILE),
@@ -416,9 +414,8 @@ describe('windsurfHooksToCanonical — entry shapes', () => {
     const results: ImportResult[] = [];
     await importWindsurfHooks(TEST_DIR, results);
 
-    const yaml = readFileSync(join(TEST_DIR, '.agentsmesh', 'hooks.yaml'), 'utf-8');
-    expect(yaml).toContain('CustomEvent:');
-    expect(yaml).toContain('command: echo custom');
+    expect(results).toEqual([]);
+    expect(existsSync(join(TEST_DIR, '.agentsmesh', 'hooks.yaml'))).toBe(false);
   });
 
   it('maps notification, user_prompt_submit, subagent_start, subagent_stop event names', async () => {
@@ -446,7 +443,7 @@ describe('windsurfHooksToCanonical — entry shapes', () => {
     expect(parsed).toHaveProperty('SubagentStop');
   });
 
-  it('falls back to matcher=.* when nested entry has no matcher and timeout is non-number', async () => {
+  it('falls back to matcher=* when nested entry has no matcher and timeout is non-number', async () => {
     mkdirSync(join(TEST_DIR, '.windsurf'), { recursive: true });
     writeFileSync(
       join(TEST_DIR, WINDSURF_HOOKS_FILE),
@@ -466,7 +463,7 @@ describe('windsurfHooksToCanonical — entry shapes', () => {
 
     const yaml = readFileSync(join(TEST_DIR, '.agentsmesh', 'hooks.yaml'), 'utf-8');
     const parsed = yamlParse(yaml) as Record<string, Array<Record<string, unknown>>>;
-    expect(parsed.PreToolUse[0]!.matcher).toBe('.*');
+    expect(parsed.PreToolUse[0]!.matcher).toBe('*');
     expect(parsed.PreToolUse[0]!.command).toBe('echo nested');
     expect(parsed.PreToolUse[0]).not.toHaveProperty('timeout');
   });

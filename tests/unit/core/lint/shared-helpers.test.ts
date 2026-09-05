@@ -77,19 +77,30 @@ describe('unsupportedHookEventNames', () => {
   });
 
   it('returns events that are not in the supported set', () => {
-    expect(
-      unsupportedHookEventNames({ PreToolUse: [], Notification: [] }, ['PreToolUse']),
-    ).toEqual(['Notification']);
+    expect(unsupportedHookEventNames({ PreToolUse: [], Notification: [] }, ['PreToolUse'])).toEqual(
+      ['Notification'],
+    );
   });
 
   it('excludes BEST_EFFORT_HOOK_EVENTS so the recall/capture scaffold never nags', () => {
     // PostToolUseFailure + SessionStart are agentsmesh-injected best-effort recall
     // refinements; dropping one is not user data loss, so neither is reported.
     expect(
-      unsupportedHookEventNames(
-        { PostToolUseFailure: [], SessionStart: [], Notification: [] },
-        ['PreToolUse'],
-      ),
+      unsupportedHookEventNames({ PostToolUseFailure: [], SessionStart: [], Notification: [] }, [
+        'PreToolUse',
+      ]),
     ).toEqual(['Notification']);
+  });
+
+  it('exempts a best-effort event only while every entry is the injected recall hook', () => {
+    const recall = { matcher: '*', command: 'agentsmesh lessons hook' };
+    const user = { matcher: '*', command: 'echo user' };
+    expect(unsupportedHookEventNames({ UserPromptSubmit: [recall] }, ['PreToolUse'])).toEqual([]);
+    expect(unsupportedHookEventNames({ UserPromptSubmit: [user] }, ['PreToolUse'])).toEqual([
+      'UserPromptSubmit',
+    ]);
+    expect(unsupportedHookEventNames({ UserPromptSubmit: [recall, user] }, ['PreToolUse'])).toEqual(
+      ['UserPromptSubmit'],
+    );
   });
 });

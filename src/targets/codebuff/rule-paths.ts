@@ -14,9 +14,12 @@
  * `AGENTS.override.md` concept at all.
  */
 
+import { basename } from 'node:path';
 import type { CanonicalRule } from '../../core/types.js';
 import { codexRuleDirectory } from '../codex-cli/codex-rule-paths.js';
 
+/** Unscoped rules still nest under the rule slug here; Codex embeds them in the root instead. */
 export function codebuffNestedKnowledgePath(rule: Pick<CanonicalRule, 'source' | 'globs'>): string {
-  return `${codexRuleDirectory(rule)}/AGENTS.md`;
+  const dir = codexRuleDirectory(rule) ?? basename(rule.source, '.md');
+  return `${dir}/AGENTS.md`;
 }

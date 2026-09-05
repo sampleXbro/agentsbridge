@@ -26,6 +26,7 @@ function makeBaseArgs(overrides: {
   };
   readonly recurseInstall: ReturnType<typeof vi.fn>;
   readonly installReport?: ReturnType<typeof createInstallReport>;
+  readonly flags?: Record<string, string | boolean>;
 }): Parameters<typeof routePickerResult>[0] {
   return {
     pickerResult: overrides.pickerResult,
@@ -37,9 +38,22 @@ function makeBaseArgs(overrides: {
     useExtends: false,
     nameOverride: '',
     replay: undefined,
+    flags: overrides.flags ?? {},
     recurseInstall: overrides.recurseInstall,
   };
 }
+
+/** Parent-level flags that must survive the recursion untouched. */
+const PARENT_FLAGS: Record<string, string | boolean> = {
+  global: true,
+  all: true,
+  forceFreshMaterialize: true,
+  'accept-mcp': true,
+  'accept-hooks': true,
+  // Per-candidate selection the recursion must override, not inherit.
+  path: 'parent-path',
+  name: 'parent-name',
+};
 
 function makeRecurseResult(): InstallCommandResult {
   return {
@@ -75,12 +89,107 @@ describe('routePickerResult', () => {
     expect(result!.data.mode).toBe('install');
     expect(result!.data.installed).toHaveLength(2);
     expect(recurseInstall).toHaveBeenCalledTimes(2);
-    // Marketplace recursion always forces non-interactive and clears replay.
+    // Marketplace recursion always forces non-interactive; an absent replay
+    // is normalized to `{}` so the nested call skips re-acquiring the lock.
     expect(recurseInstall.mock.calls[0]![0]).toMatchObject({
       force: true,
       'dry-run': false,
       path: 'sub-a',
       name: 'sub-a',
+      extends: false,
+    });
+    expect(recurseInstall.mock.calls[0]![3]).toEqual({});
+  });
+
+  it('marketplace branch: forwards the parent replay scope (branch pin, consent) to every sub-install', async () => {
+    const recurseInstall = vi.fn().mockResolvedValue(makeRecurseResult());
+    const replay = { originalRef: 'main', acceptedElevated: ['mcp' as const] };
+    const args = {
+      ...makeBaseArgs({
+        pickerResult: {
+          isMarketplace: true,
+          targets: [
+            { name: 'sub-a', path: 'sub-a' },
+            { name: 'sub-b', path: 'sub-b' },
+          ],
+        },
+        recurseInstall,
+      }),
+      replay,
+    };
+
+    await routePickerResult(args);
+
+    expect(recurseInstall).toHaveBeenCalledTimes(2);
+    expect(recurseInstall.mock.calls[0]![3]).toEqual(replay);
+    expect(recurseInstall.mock.calls[1]![3]).toEqual(replay);
+  });
+
+  it('marketplace branch: threads --global, --all, forceFreshMaterialize and --accept-* into every sub-install', async () => {
+    const recurseInstall = vi.fn().mockResolvedValue(makeRecurseResult());
+    const args = makeBaseArgs({
+      pickerResult: {
+        isMarketplace: true,
+        targets: [
+          { name: 'sub-a', path: 'sub-a' },
+          { name: 'sub-b', path: 'sub-b' },
+        ],
+      },
+      recurseInstall,
+      flags: PARENT_FLAGS,
+    });
+
+    await routePickerResult(args);
+
+    expect(recurseInstall).toHaveBeenCalledTimes(2);
+    expect(recurseInstall.mock.calls[0]![0]).toEqual({
+      global: true,
+      all: true,
+      forceFreshMaterialize: true,
+      'accept-mcp': true,
+      'accept-hooks': true,
+      force: true,
+      'dry-run': false,
+      path: 'sub-a',
+      as: '',
+      target: '',
+      name: 'sub-a',
+      extends: false,
+    });
+    expect(recurseInstall.mock.calls[1]![0]).toMatchObject({
+      global: true,
+      'accept-mcp': true,
+      path: 'sub-b',
+      name: 'sub-b',
+    });
+  });
+
+  it('single-candidate branch: threads --global and --accept-* while overriding the picked selection', async () => {
+    const recurseInstall = vi.fn().mockResolvedValue(makeRecurseResult());
+    const args = makeBaseArgs({
+      pickerResult: {
+        isMarketplace: false,
+        targets: [{ name: 'only', path: 'rules', as: 'rules', target: 'claude-code' }],
+      },
+      recurseInstall,
+      flags: PARENT_FLAGS,
+    });
+
+    await routePickerResult(args);
+
+    expect(recurseInstall).toHaveBeenCalledTimes(1);
+    expect(recurseInstall.mock.calls[0]![0]).toEqual({
+      global: true,
+      all: true,
+      forceFreshMaterialize: true,
+      'accept-mcp': true,
+      'accept-hooks': true,
+      force: false,
+      'dry-run': false,
+      path: 'rules',
+      as: 'rules',
+      target: 'claude-code',
+      name: '',
       extends: false,
     });
   });

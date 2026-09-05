@@ -2,6 +2,7 @@
  * Parse .agentsmesh/mcp.json into McpConfig.
  */
 
+import { failSyntax, type ParseErrorCallback } from './syntax-error.js';
 import { readFileSafe } from '../../utils/filesystem/fs.js';
 import type { McpConfig, McpServer } from '../../core/types.js';
 
@@ -108,14 +109,17 @@ function stripJsonComments(text: string): string {
  * @param mcpPath - Absolute path to .agentsmesh/mcp.json
  * @returns McpConfig or null if file missing, malformed, or lacks mcpServers
  */
-export async function parseMcp(mcpPath: string): Promise<McpConfig | null> {
+export async function parseMcp(
+  mcpPath: string,
+  onParseError?: ParseErrorCallback,
+): Promise<McpConfig | null> {
   const content = await readFileSafe(mcpPath);
   if (!content) return null;
   let parsed: unknown;
   try {
     parsed = JSON.parse(stripJsonComments(content)) as unknown;
-  } catch {
-    return null;
+  } catch (err) {
+    return failSyntax(mcpPath, err, onParseError);
   }
   if (!parsed || typeof parsed !== 'object') return null;
   const mcpServersRaw = (parsed as Record<string, unknown>).mcpServers;

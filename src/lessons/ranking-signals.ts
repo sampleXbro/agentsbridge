@@ -1,4 +1,5 @@
 import type { LessonsGraph } from './graph-schema.js';
+import { globNarrowness } from './glob-breadth.js';
 import type { MatchedLesson } from './query.js';
 
 /**
@@ -15,6 +16,31 @@ export function buildFanout(graph: LessonsGraph): Map<string, number> {
     for (const t of lesson.triggers) fanout.set(t, (fanout.get(t) ?? 0) + 1);
   }
   return fanout;
+}
+
+/**
+ * A keyword can match a `--file` query incidentally, because recall also tests
+ * the path's own tokens: "lessons recall" hits `src/lessons/recall.ts`. That is
+ * weaker evidence than any glob deliberately written about the path, so it
+ * ranks below every such glob and above only a repo-wide one. In a keyword
+ * query every match is a keyword, so they all tie here and the ordering is the
+ * one this signal never touched.
+ */
+const KEYWORD_NARROWNESS = 0.4;
+
+/**
+ * Narrowness per trigger id, in [0,1]. A `file_glob` scores by how much of the
+ * path it pins down; a keyword scores the constant above; a command pattern is
+ * neutral, since it can only match a command query where every rival is also a
+ * command pattern.
+ */
+export function buildNarrowness(graph: LessonsGraph): Map<string, number> {
+  const narrowness = new Map<string, number>();
+  for (const [id, trigger] of Object.entries(graph.triggers)) {
+    if (trigger.kind === 'file_glob') narrowness.set(id, globNarrowness(trigger.pattern));
+    else narrowness.set(id, trigger.kind === 'keyword' ? KEYWORD_NARROWNESS : 1);
+  }
+  return narrowness;
 }
 
 /**

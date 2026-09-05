@@ -200,7 +200,7 @@ describe('import capabilities', () => {
     expect(hooks).toHaveProperty('PostToolUse');
     expect(hooks['PostToolUse']).toEqual([
       {
-        matcher: '.*',
+        matcher: '*',
         type: 'command',
         command: 'npm run lint',
       },

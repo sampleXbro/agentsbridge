@@ -154,9 +154,8 @@ describe('deepagents-cli global layout', () => {
     expect(descriptor.capabilities.permissions).toBe('partial');
   });
 
-  it('detection paths include project-level paths', () => {
-    expect(descriptor.detectionPaths).toContain(DEEPAGENTS_CLI_ROOT_FILE);
-    expect(descriptor.detectionPaths).toContain(DEEPAGENTS_CLI_MCP_FILE);
+  it('detects only on its own root file: `.mcp.json` is co-owned with claude-code', () => {
+    expect(descriptor.detectionPaths).toEqual([DEEPAGENTS_CLI_ROOT_FILE]);
   });
 });
 

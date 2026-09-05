@@ -52,19 +52,26 @@ Now `npm install` automatically restores packs.
 
 ```yaml
 # .agentsmesh/installs.yaml
-packs:
-  - name: shared-skills
-    source: github:my-org/skills@v1.0.0
-    installed: 2026-03-01T10:00:00Z
-
+version: 1
+installs:
   - name: security-agents
     source: github:my-org/agents
+    source_kind: github
+    features:
+      - agents
     path: agents
     as: agents
-    installed: 2026-02-15T08:30:00Z
+    original_ref: main
+  - name: shared-skills
+    source: github:my-org/skills@v1.0.0
+    version: v1.0.0
+    source_kind: github
+    features:
+      - skills
+    original_ref: v1.0.0
 ```
 
-Commit this file so teammates can reinstall the same packs.
+Commit this file so teammates can reinstall the same packs. Rows are sorted by name; see the [install reference](../../cli/install/#pack-storage) for the full field list.
 
 ## Gitignore recommendation
 

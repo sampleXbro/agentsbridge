@@ -30,13 +30,8 @@ export type { LessonsFlags } from './lessons-helpers.js';
 export { doQuery } from './lessons-query-handler.js';
 export { doMergeDriver } from './lessons-merge-driver-handler.js';
 // Write-side handlers live in a sibling module to keep each file focused.
-export {
-  doAdd,
-  doDeprecate,
-  doMerge,
-  doStripMarkers,
-  doUntrigger,
-} from './lessons-write-handlers.js';
+export { doAdd, doDeprecate } from './lessons-write-handlers.js';
+export { doMerge, doStripMarkers, doUntrigger } from './lessons-curation-handlers.js';
 export { doImportMd } from './lessons-import-md-handler.js';
 export { doPrune } from './lessons-prune-handler.js';
 

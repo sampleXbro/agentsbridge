@@ -7,6 +7,8 @@ import { printVersion } from './version.js';
 import { handleError } from './error-handler.js';
 import { muteLogger } from '../utils/output/logger.js';
 import { cmdHandlers } from './command-handlers.js';
+import { flagTakesValue } from './flag-spec.js';
+import { silenceUi } from './ui/ui.js';
 
 /** A parsed flag value: a string, a boolean (presence), or — when the flag is repeated — an array of its string values. */
 export type CliFlagValue = string | boolean | string[];
@@ -55,15 +57,18 @@ export function parseArgs(argv: string[]): ParseResult {
       return { command: 'version', flags: {}, args: [] };
     if (command === 'help' && arg === '--help') return { command: 'help', flags: {}, args: [] };
     if (arg.startsWith('--')) {
-      const name = arg.slice(2);
-      // Valueless global flags never take a value — leave the next token (often
-      // the command name) for the parser instead of consuming it.
-      if (VALUELESS_FLAGS.has(name)) {
-        setFlag(flags, name, true);
+      const eq = arg.indexOf('=');
+      const name = eq === -1 ? arg.slice(2) : arg.slice(2, eq);
+      // Boolean flags never take a value, so `--dry-run <pack>` keeps the pack
+      // as a positional. Flags unknown to the help table stay value-hungry.
+      const isBoolean = VALUELESS_FLAGS.has(name) || flagTakesValue(command, name) === false;
+      if (eq !== -1) {
+        const raw = arg.slice(eq + 1);
+        setFlag(flags, name, isBoolean ? raw !== 'false' : raw);
         continue;
       }
       const next = argv[i + 1];
-      if (next === undefined || next.startsWith('--')) {
+      if (isBoolean || next === undefined || next.startsWith('--')) {
         setFlag(flags, name, true);
       } else {
         setFlag(flags, name, next);
@@ -98,7 +103,10 @@ export async function main(parsed: ParseResult): Promise<void> {
     return;
   }
 
-  if (flags.json === true) muteLogger();
+  if (flags.json === true) {
+    muteLogger();
+    silenceUi();
+  }
 
   await router.route(command, flags, args);
 }

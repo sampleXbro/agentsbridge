@@ -104,7 +104,9 @@ describe('lintHooks (openhands)', () => {
 
   it('does not warn about agentsmesh best-effort events', () => {
     const messages = lintHooks(
-      makeCanonical({ hooks: { PostToolUseFailure: [{ matcher: '*', command: 'x' }] } }),
+      makeCanonical({
+        hooks: { PostToolUseFailure: [{ matcher: '*', command: 'agentsmesh lessons hook' }] },
+      }),
     ).map((d) => d.message);
     expect(messages.some((m) => m.includes('PostToolUseFailure'))).toBe(false);
   });

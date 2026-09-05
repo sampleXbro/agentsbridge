@@ -1,8 +1,10 @@
 /**
  * Eviction of generated outputs a run no longer emits.
  *
- * `managedOutputs.files` is a static list a descriptor owns outright, so it can
- * be deleted on sight. `managedOutputs.dirs` is different: the sweep discovers
+ * `managedOutputs.files` is a static list a descriptor owns, but only the lock's
+ * provenance says whether *this* copy is ours: a hand-authored `AGENTS.md` on a
+ * first run is not. `supersededFiles` are the one exception, evicted whenever
+ * the primary root is emitted. `managedOutputs.dirs` is different: the sweep discovers
  * whatever is inside, and most of those directories are shared — the tool's own
  * UI writes there (`.kiro/hooks`, `.cursor/rules`), users hand-author there
  * (`.claude/skills`), and agentsmesh's own importers read foreign files back
@@ -18,7 +20,12 @@
 import { readdir, rm } from 'node:fs/promises';
 import { join, relative } from 'node:path';
 import { exists } from '../../utils/filesystem/fs.js';
-import { getTargetManagedOutputs } from '../../targets/catalog/builtin-targets.js';
+import {
+  getBuiltinTargetDefinition,
+  getTargetLayout,
+  getTargetManagedOutputs,
+} from '../../targets/catalog/builtin-targets.js';
+import { getDescriptor } from '../../targets/catalog/registry.js';
 import type { TargetLayoutScope } from '../../targets/catalog/target-descriptor.js';
 
 async function listFiles(root: string, base = root): Promise<string[]> {
@@ -83,6 +90,18 @@ function retainedDirs(
   return dirs;
 }
 
+function primaryEmitted(
+  target: string,
+  scope: TargetLayoutScope,
+  expected: ReadonlySet<string>,
+): boolean {
+  const descriptor = getBuiltinTargetDefinition(target) ?? getDescriptor(target);
+  const primary =
+    getTargetLayout(target, scope)?.rootInstructionPath ??
+    descriptor?.generators.primaryRootInstructionPath;
+  return primary !== undefined && expected.has(primary);
+}
+
 export async function findStaleGeneratedOutputs(
   args: StaleGeneratedOutputsArgs,
 ): Promise<string[]> {
@@ -103,7 +122,17 @@ export async function findStaleGeneratedOutputs(
     const managed = getTargetManagedOutputs(target, scope);
     if (!managed) continue;
     for (const file of managed.coOwnedFiles ?? []) coOwned.add(file);
-    for (const file of managed.files) stale.add(file);
+    for (const file of managed.files) {
+      // Same provenance rule as the directory sweep: a static path agentsmesh
+      // never wrote (first run, hand-authored AGENTS.md) is not ours to evict.
+      if (generated !== null && !generated.has(file)) continue;
+      stale.add(file);
+    }
+    // Superseded alternates go once this run emitted the primary root: the
+    // tool would otherwise load the same rules from both locations.
+    if (primaryEmitted(target, scope, expected)) {
+      for (const file of managed.supersededFiles ?? []) stale.add(file);
+    }
     for (const dir of managed.dirs) {
       if (retained.has(dir)) continue;
       const absDir = join(args.projectRoot, dir);

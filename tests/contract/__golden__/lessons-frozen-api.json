@@ -411,7 +411,7 @@
             ]
           },
           "trigger_keywords": {
-            "description": "keyword triggers — case-insensitive substrings of task descriptions.",
+            "description": "keyword triggers — case-insensitive whole-token runs of task descriptions.",
             "anyOf": [
               {
                 "type": "string"

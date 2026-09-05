@@ -1,3 +1,15 @@
+# Bug hunt and sequential fixes (2026-09-04)
+
+- [x] 1. Discovery: five read-only agents (core pipeline, install/remote,
+      lessons, CLI/MCP, target descriptors) report reproducible defects with
+      file:line, repro, severity, minimal fix
+- [x] 2. Triage: confirm each candidate myself (repro or failing test);
+      rank by user impact; drop non-bugs
+- [x] 3. Fix sequentially, one bug at a time: failing test -> minimal fix ->
+      focused tests green -> next
+- [x] 4. Full gate once at the end: typecheck, lint, knip, test:coverage +
+      floor, build; docs updated where behavior/flags change; lessons captured
+
 # README rewrite + SEO (2026-09-04)
 
 - [x] 1. README.md per the `readme` skill: header, problem/solution, install,

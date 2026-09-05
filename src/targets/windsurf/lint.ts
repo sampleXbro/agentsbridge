@@ -42,3 +42,24 @@ export function lintPermissions(canonical: CanonicalFiles): LintDiagnostic[] {
     ),
   ];
 }
+
+const WILDCARD_MATCHERS = new Set(['', '*', '.*']);
+
+/** Windsurf hook entries have no matcher: a tool-scoped canonical hook runs on every event. */
+export function lintHooks(canonical: CanonicalFiles): LintDiagnostic[] {
+  if (!canonical.hooks) return [];
+  const diagnostics: LintDiagnostic[] = [];
+  for (const [event, entries] of Object.entries(canonical.hooks)) {
+    for (const entry of entries ?? []) {
+      if (WILDCARD_MATCHERS.has(entry.matcher.trim())) continue;
+      diagnostics.push(
+        createWarning(
+          '.agentsmesh/hooks.yaml',
+          'windsurf',
+          `Windsurf hooks have no matcher field; ${event} hook "${entry.command}" runs on every ${event} event (matcher "${entry.matcher}" is not projected).`,
+        ),
+      );
+    }
+  }
+  return diagnostics;
+}

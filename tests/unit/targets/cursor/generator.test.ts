@@ -319,7 +319,7 @@ describe('generateRules (cursor)', () => {
 });
 
 describe('generateCommands (cursor)', () => {
-  it('generates plain markdown .cursor/commands/*.md from canonical commands', () => {
+  it('generates .cursor/commands/*.md with a description frontmatter block', () => {
     const canonical = makeCanonical({
       commands: [
         {
@@ -334,7 +334,9 @@ describe('generateCommands (cursor)', () => {
     const results = generateCommands(canonical);
     expect(results).toHaveLength(1);
     expect(results[0]!.path).toBe('.cursor/commands/review.md');
-    expect(results[0]!.content).toBe('Review current changes.');
+    expect(results[0]!.content).toBe(
+      '---\ndescription: Run code review\n---\n\nReview current changes.',
+    );
   });
 
   it('returns empty when no commands', () => {
@@ -342,22 +344,20 @@ describe('generateCommands (cursor)', () => {
     expect(generateCommands(canonical)).toEqual([]);
   });
 
-  it('drops command metadata that Cursor commands cannot represent natively', () => {
+  it('emits a bare body when the command has no description', () => {
     const canonical = makeCanonical({
       commands: [
         {
           source: '/proj/.agentsmesh/commands/minimal.md',
           name: 'minimal',
-          description: 'Minimal',
-          allowedTools: [],
+          description: '',
+          allowedTools: ['Read'],
           body: 'Body',
         },
       ],
     });
     const results = generateCommands(canonical);
     expect(results[0]!.content).toBe('Body');
-    expect(results[0]!.content).not.toContain('allowed-tools');
-    expect(results[0]!.content).not.toContain('description:');
   });
 
   it('generates command with empty body (covers cmd.body.trim() || "" branch)', () => {
@@ -374,7 +374,7 @@ describe('generateCommands (cursor)', () => {
     });
     const results = generateCommands(canonical);
     expect(results).toHaveLength(1);
-    expect(results[0]!.content).toBe('');
+    expect(results[0]!.content).toBe('---\ndescription: Empty body command\n---\n\n');
   });
 });
 

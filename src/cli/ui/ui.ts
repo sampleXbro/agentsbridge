@@ -47,5 +47,27 @@ export function createUi(opts?: { isTTY?: boolean }): Ui {
   };
 }
 
-/** Process-wide default facade (TTY auto-detected). */
-export const ui: Ui = createUi();
+let active: Ui = createUi();
+
+/** Re-detect (or force) the presentation mode; tests and `--json` use this. */
+export function configureUi(opts?: { isTTY?: boolean }): void {
+  active = createUi(opts);
+}
+
+/** `--json` mode: decorative output would corrupt the single stdout envelope. */
+export function silenceUi(): void {
+  active = createUi({ isTTY: false });
+}
+
+/** Process-wide facade; delegates so a later configureUi/silenceUi applies everywhere. */
+export const ui: Ui = {
+  intro: (t) => active.intro(t),
+  outro: (m) => active.outro(m),
+  note: (b, t) => active.note(b, t),
+  spinner: () => active.spinner(),
+  success: (m) => active.success(m),
+  error: (m) => active.error(m),
+  warn: (m) => active.warn(m),
+  info: (m) => active.info(m),
+  step: (m) => active.step(m),
+};

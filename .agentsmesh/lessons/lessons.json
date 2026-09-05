@@ -743,6 +743,20 @@
         "t-glob-8173701c"
       ]
     },
+    "codex-cli-rule-paths-when-changing-where-codex-cli": {
+      "createdAt": "2026-09-05",
+      "evidence": [],
+      "rationale": "codexRuleDirectory is imported by codebuff; roundtrip/integration/e2e tests hard-code the nested path lists.",
+      "rule": "When changing where codex-cli nests or embeds advisory rules (codex-rule-paths.ts), keep Codebuff's `codebuffNestedKnowledgePath` behaviour explicit in codebuff/rule-paths.ts (it shares `codexRuleDirectory`) and update the strict path lists in tests/import-generate-roundtrip.test.ts plus the dist-driven integration/e2e reference-rewrite tests, which cannot be run without a rebuilt dist.",
+      "status": "active",
+      "topics": [
+        "codex-cli-rule-paths"
+      ],
+      "triggers": [
+        "t-glob-a86844dd",
+        "t-glob-14939d1b"
+      ]
+    },
     "copilot-hooks-copilot-hooks-matcher-is-compiled": {
       "createdAt": "2026-07-12",
       "evidence": [
@@ -1849,6 +1863,20 @@
         "t-glob-0390d7f9",
         "t-glob-5f37a5af",
         "t-kw-16226ad2"
+      ]
+    },
+    "generation-cleanup-stale-output-eviction-must-never": {
+      "createdAt": "2026-09-05",
+      "evidence": [],
+      "rule": "Stale-output eviction must never delete a static managedOutputs.files path the lock has no provenance for (first run, hand-authored AGENTS.md). Alternate instruction locations a primary root replaces (.claude/CLAUDE.md, .kimi-code/AGENTS.md) belong in managedOutputs.supersededFiles, evicted only when the run emits the primary; do not reintroduce a 'delete on sight' or a legacy-lock flag.",
+      "status": "active",
+      "topics": [
+        "generation-cleanup"
+      ],
+      "triggers": [
+        "t-glob-98419953",
+        "t-glob-9f0a5990",
+        "t-kw-ef1e743a"
       ]
     },
     "generation-collision-source-maps-a-generator-that-merges-into": {
@@ -5995,6 +6023,22 @@
         "t-cmd-edcf48e9"
       ]
     },
+    "shell-quoting-in-zsh-bash-calls-never": {
+      "createdAt": "2026-09-05",
+      "evidence": [
+        "lesson:shell-quoting-never-insert-zero-width-or"
+      ],
+      "rationale": "A chained cat/echo command failed with \"==== not found\", silently dropping two file reads and costing a round-trip.",
+      "rule": "In zsh Bash calls, never use a bare `=====` (or any token starting with `=`) as an echo separator between chained commands; zsh expands `=word` as an equals-expansion and aborts the whole chain. Quote it ('-----') or use plain dashes.",
+      "status": "active",
+      "topics": [
+        "shell-quoting"
+      ],
+      "triggers": [
+        "t-cmd-a03e5640",
+        "t-kw-67b582a5"
+      ]
+    },
     "shell-quoting-never-insert-zero-width-or": {
       "createdAt": "2026-06-05",
       "evidence": [],
@@ -9172,6 +9216,9 @@
     "cli-presentation": {
       "summary": "CLI presentation/clack: spinner line-ownership, TTY-gating, where to render bulk output relative to the spinner."
     },
+    "codex-cli-rule-paths": {
+      "summary": "Codex CLI nested/root AGENTS.md rule path derivation and its cross-target consumers"
+    },
     "copilot-hooks": {
       "summary": "GitHub Copilot target hooks generator/importer quirks"
     },
@@ -9192,6 +9239,9 @@
     },
     "generate": {
       "summary": "Generate engine emission, merge policy and stale cleanup"
+    },
+    "generation-cleanup": {
+      "summary": "Stale generated-output eviction and provenance"
     },
     "generation-collision-source-maps": {
       "summary": "Generation pipeline — output-source map completeness, shared artifact collision, multi-output rewrite maps, decoration as artifacts."
@@ -9526,6 +9576,10 @@
       "kind": "command_pattern",
       "pattern": "git tag"
     },
+    "t-cmd-a03e5640": {
+      "kind": "command_pattern",
+      "pattern": "echo\\s+=+"
+    },
     "t-cmd-a17d0ed7": {
       "kind": "command_pattern",
       "pattern": "git rev-parse .*upstream"
@@ -9813,6 +9867,10 @@
     "t-glob-13a07989": {
       "kind": "file_glob",
       "pattern": "src/mcp/handlers/*.ts"
+    },
+    "t-glob-14939d1b": {
+      "kind": "file_glob",
+      "pattern": "src/targets/codebuff/rule-paths.ts"
     },
     "t-glob-151a6581": {
       "kind": "file_glob",
@@ -10457,6 +10515,10 @@
     "t-glob-a5fc7764": {
       "kind": "file_glob",
       "pattern": "tests/**/*posix*"
+    },
+    "t-glob-a86844dd": {
+      "kind": "file_glob",
+      "pattern": "src/targets/codex-cli/codex-rule-paths.ts"
     },
     "t-glob-a93a3ef5": {
       "kind": "file_glob",
@@ -11190,6 +11252,10 @@
       "kind": "keyword",
       "pattern": "revoke owned keys"
     },
+    "t-kw-67b582a5": {
+      "kind": "keyword",
+      "pattern": "zsh separator echo equals"
+    },
     "t-kw-6829f894": {
       "kind": "keyword",
       "pattern": "fork_context"
@@ -11653,6 +11719,10 @@
     "t-kw-eeeb356f": {
       "kind": "keyword",
       "pattern": "canonicalize keys"
+    },
+    "t-kw-ef1e743a": {
+      "kind": "keyword",
+      "pattern": "stale cleanup provenance supersededFiles"
     },
     "t-kw-f169d21b": {
       "kind": "keyword",

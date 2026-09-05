@@ -1,6 +1,6 @@
 import type { Lesson, LessonsGraph } from './graph-schema.js';
 import { collectMatchedTriggerIds, type LessonsQuery, type MatchedLesson } from './query.js';
-import { buildFanout, buildTopicCoherence } from './ranking-signals.js';
+import { buildFanout, buildNarrowness, buildTopicCoherence } from './ranking-signals.js';
 import { bm25, buildCorpus, queryTerms } from './ranking-text.js';
 
 export interface RankReason {
@@ -58,7 +58,11 @@ const RRF_K = 60;
  * specificity dominates, topic coherence (a graph signal) sits in the middle,
  * and rule-text BM25 only breaks ties the structural signals cannot.
  */
-const SPECIFICITY_WEIGHT = 3;
+// Strictly greater than TOPIC_COHERENCE + BM25 + EFFECTIVENESS, so a lesson
+// that wins specificity cannot be outvoted by a clean sweep of the weaker
+// signals. Mandatory recall fires on --file/--cmd, where "which trigger matched
+// and how precisely" is the evidence; the rest only order what specificity ties.
+const SPECIFICITY_WEIGHT = 5;
 const TOPIC_COHERENCE_WEIGHT = 2;
 const BM25_WEIGHT = 1;
 // Effectiveness (outcome-log) is a corrective nudge, not a driver — the same low
@@ -115,6 +119,7 @@ export function rankLessons(
   const terms = queryTerms(query);
   const corpus = buildCorpus(graph);
   const fanout = buildFanout(graph);
+  const narrowness = buildNarrowness(graph);
   const coherence = buildTopicCoherence(matches);
   const matchedTriggerIds = collectMatchedTriggerIds(graph, query);
 
@@ -122,7 +127,11 @@ export function rankLessons(
     const hitTriggers = lesson.triggers.filter((t) => matchedTriggerIds.has(t));
     let specificity = 0;
     // Each hit trigger belongs to this active, matched lesson, so fanout has it.
-    for (const t of hitTriggers) specificity = Math.max(specificity, 1 / fanout.get(t)!);
+    // Fanout alone cannot separate a pinpoint glob from a subtree glob (trigger
+    // ids are content-addressed, so both are referenced once); narrowness does.
+    for (const t of hitTriggers) {
+      specificity = Math.max(specificity, (narrowness.get(t) ?? 1) / fanout.get(t)!);
+    }
     return {
       id,
       lesson,

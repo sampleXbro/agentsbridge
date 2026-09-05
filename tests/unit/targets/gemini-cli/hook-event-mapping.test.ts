@@ -225,7 +225,7 @@ describe('lintHooks — extended supported events', () => {
     expect(diags).toHaveLength(0);
   });
 
-  it('still warns for genuinely unsupported events (e.g. UserPromptSubmit is user-authored)', () => {
+  it('warns once for a user-authored UserPromptSubmit hook (Gemini has no such event)', () => {
     const canonical = makeCanonical({
       hooks: {
         UserPromptSubmit: [{ matcher: '*', command: 'echo prompt', type: 'command' }],
@@ -233,9 +233,17 @@ describe('lintHooks — extended supported events', () => {
       },
     });
     const diags = lintHooks(canonical);
-    // UserPromptSubmit is a BEST_EFFORT event → no warning (it's agentsmesh-injected, exempt)
-    // This test verifies our supported list doesn't produce false positives
-    expect(diags).toHaveLength(0);
+    expect(diags).toHaveLength(1);
+    expect(diags[0]!.message).toContain('UserPromptSubmit is not supported by gemini-cli');
+  });
+
+  it('stays silent for the agentsmesh-injected UserPromptSubmit recall hook', () => {
+    const canonical = makeCanonical({
+      hooks: {
+        UserPromptSubmit: [{ matcher: '*', command: 'agentsmesh lessons hook', type: 'command' }],
+      },
+    });
+    expect(lintHooks(canonical)).toHaveLength(0);
   });
 
   it('returns no diagnostics when all hooks are supported or BEST_EFFORT', () => {
@@ -247,7 +255,7 @@ describe('lintHooks — extended supported events', () => {
         SubagentStart: [{ matcher: '*', command: 'echo', type: 'command' }],
         SubagentStop: [{ matcher: '*', command: 'echo', type: 'command' }],
         SessionStart: [{ matcher: '*', command: 'echo', type: 'command' }],
-        PostToolUseFailure: [{ matcher: '*', command: 'echo', type: 'command' }],
+        PostToolUseFailure: [{ matcher: '*', command: 'agentsmesh lessons hook', type: 'command' }],
       },
     });
     const diags = lintHooks(canonical);

@@ -27,10 +27,19 @@ export async function serializeImportedCommandWithFallback(
     ? (imported.allowedTools ?? [])
     : existingAllowedTools;
 
+  // Keys the source format cannot carry (outputStyle, model, ...) survive a
+  // re-import; only the two owned keys are rewritten.
+  const {
+    description: _d,
+    'allowed-tools': _a,
+    allowedTools: _c,
+    ...preserved
+  } = existingFrontmatter;
   return serializeFrontmatter(
     {
       description,
       'allowed-tools': allowedTools,
+      ...preserved,
     },
     body.trim() || '',
   );

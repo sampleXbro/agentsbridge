@@ -236,8 +236,62 @@ describe('importFromWindsurf', () => {
     expect(results.find((r) => r.toPath === '.agentsmesh/hooks.yaml')).toBeDefined();
     const hooks = readFileSync(join(TEST_DIR, '.agentsmesh', 'hooks.yaml'), 'utf-8');
     expect(hooks).toContain('PreToolUse');
-    expect(hooks).toContain('matcher: .*');
+    expect(hooks).toContain('matcher: "*"');
     expect(hooks).toContain('command: echo pre');
+  });
+
+  it('inverts snake_case events and drops events with no canonical equivalent', async () => {
+    mkdirSync(join(TEST_DIR, '.windsurf'), { recursive: true });
+    writeFileSync(
+      join(TEST_DIR, WINDSURF_HOOKS_FILE),
+      JSON.stringify({
+        hooks: {
+          session_start: [{ command: 'echo start', show_output: true }],
+          pre_read_code: [{ command: 'echo read', show_output: true }],
+          stop: [{ command: 'echo stop', show_output: true }],
+        },
+      }),
+    );
+    await importFromWindsurf(TEST_DIR);
+    const hooks = readFileSync(join(TEST_DIR, '.agentsmesh', 'hooks.yaml'), 'utf-8');
+    expect(hooks).toContain('SessionStart:');
+    expect(hooks).not.toContain('session_start');
+    expect(hooks).not.toContain('pre_read_code');
+    expect(hooks).not.toContain('stop');
+  });
+
+  it('keeps the matcher of a canonical hook that already exists in hooks.yaml', async () => {
+    mkdirSync(join(TEST_DIR, '.windsurf'), { recursive: true });
+    mkdirSync(join(TEST_DIR, '.agentsmesh'), { recursive: true });
+    writeFileSync(
+      join(TEST_DIR, '.agentsmesh', 'hooks.yaml'),
+      'PreToolUse:\n  - matcher: Bash\n    type: command\n    command: echo pre\n',
+    );
+    writeFileSync(
+      join(TEST_DIR, WINDSURF_HOOKS_FILE),
+      JSON.stringify({
+        hooks: {
+          pre_tool_use: [
+            { command: 'echo pre', show_output: true },
+            { command: 'echo new', show_output: true },
+          ],
+        },
+      }),
+    );
+    await importFromWindsurf(TEST_DIR);
+    const hooks = readFileSync(join(TEST_DIR, '.agentsmesh', 'hooks.yaml'), 'utf-8');
+    expect(hooks).toBe(
+      [
+        'PreToolUse:',
+        '  - matcher: Bash',
+        '    type: command',
+        '    command: echo pre',
+        '  - matcher: "*"',
+        '    type: command',
+        '    command: echo new',
+        '',
+      ].join('\n'),
+    );
   });
 
   it('imports cursor-style legacy windsurf hooks format for backward compatibility', async () => {

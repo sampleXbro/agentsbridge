@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { meshLayout } from './mesh-layout.mjs';
+import { meshLayout, meshReturnLoop } from './mesh-layout.mjs';
 
 const box = { width: 400, height: 300 };
 
@@ -53,4 +53,31 @@ test('meshLayout: two targets sit on the vertical margins; negative counts yield
     { x: 360, y: 270 },
   ]);
   assert.deepEqual(meshLayout(-3, box).targets, []);
+});
+
+test('meshReturnLoop: node sits on the lane, centred between source and targets', () => {
+  const layout = meshLayout(3, box);
+  const loop = meshReturnLoop(layout, 330);
+  assert.deepEqual(loop.node, { x: 200, y: 330 });
+});
+
+test('meshReturnLoop: a rail runs from the top target through the bottom one, then the sweep passes the node and lands under the source', () => {
+  const layout = meshLayout(3, box);
+  const { source, targets } = layout;
+  const first = targets[0];
+  const last = targets[targets.length - 1];
+  const loop = meshReturnLoop(layout, 330, 19);
+  assert.ok(loop.path.startsWith(`M ${first.x} ${first.y} L ${last.x} ${last.y} C `), loop.path);
+  assert.ok(loop.path.includes(`, ${loop.node.x} ${loop.node.y} C `), loop.path);
+  assert.ok(loop.path.endsWith(`${source.x} ${source.y + 19}`), loop.path);
+});
+
+test('meshReturnLoop: a single target needs no rail', () => {
+  const layout = meshLayout(1, box);
+  const [only] = layout.targets;
+  assert.ok(meshReturnLoop(layout, 330).path.startsWith(`M ${only.x} ${only.y} C `));
+});
+
+test('meshReturnLoop: no targets means no loop', () => {
+  assert.equal(meshReturnLoop(meshLayout(0, box), 330), null);
 });

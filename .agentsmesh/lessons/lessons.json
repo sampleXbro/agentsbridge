@@ -8685,6 +8685,20 @@
         "t-kw-2df7a7e6"
       ]
     },
+    "website-svg-reveal-an-animatemotion-driven-svg": {
+      "createdAt": "2026-09-05",
+      "evidence": [
+        "8b554539"
+      ],
+      "rule": "Reveal an animateMotion-driven SVG element on the SMIL clock: start it at r=0 and add <animate attributeName='r'> with the same begin as the motion. Do not reveal it with a CSS opacity animation-delay, even with identical delay values: the CSS and SMIL timelines drift, so the element sits parked at the SVG origin, visible as a dot cluster in the top-left corner, until its motion begins.",
+      "status": "active",
+      "topics": [
+        "website-svg"
+      ],
+      "triggers": [
+        "t-glob-ddc2ae20"
+      ]
+    },
     "windows-paths-a-directory-rename-that-finalizes": {
       "createdAt": "2026-06-12",
       "evidence": [
@@ -9374,6 +9388,9 @@
     },
     "website-markup": {
       "summary": "Website (Starlight) markup and CSS pitfalls"
+    },
+    "website-svg": {
+      "summary": "Hand-written SVG and CSS animation in the docs site's Astro components."
     },
     "windows-paths": {
       "summary": "POSIX vs Windows path handling; separators, realpath divergence, drive letters, CRLF, chokidar polling, basename vs split."
@@ -10747,6 +10764,10 @@
     "t-glob-dd0e31f0": {
       "kind": "file_glob",
       "pattern": "src/targets/copilot/**"
+    },
+    "t-glob-ddc2ae20": {
+      "kind": "file_glob",
+      "pattern": "website/src/components/**/*.astro"
     },
     "t-glob-e0110795": {
       "kind": "file_glob",

@@ -16,7 +16,8 @@ export default defineConfig({
       provider: 'v8',
       include: ['src/**/*.ts'],
       // `json-summary` feeds scripts/coverage-floor.ts; `lcov` feeds Codecov.
-      reporter: ['text', 'html', 'lcov', 'json-summary'],
+      // `json` keeps coverage-final.json for per-branch triage of floor failures.
+      reporter: ['text', 'html', 'lcov', 'json', 'json-summary'],
       // ─────────────────────────────────────────────────────────────────────
       // Two-tier gate:
       //  1. Aggregate thresholds below (95%) over every included file.

@@ -5,7 +5,13 @@ import starlightLinksValidator from 'starlight-links-validator';
 import devOnlyRoutes from './integrations/dev-only-routes.mjs';
 import llmsTxtIntegration from './integrations/llms-txt.mjs';
 import seoRobotsIntegration from './integrations/seo-robots.mjs';
-import { absoluteFromBase, fromBase, getSiteBase, getSiteOrigin, resolveDeploySite } from './site-url.mjs';
+import {
+  absoluteFromBase,
+  fromBase,
+  getSiteBase,
+  getSiteOrigin,
+  resolveDeploySite,
+} from './site-url.mjs';
 
 const deploySite = resolveDeploySite();
 const site = getSiteOrigin();
@@ -84,8 +90,6 @@ export default defineConfig({
         './src/styles/tokens.css',
         './src/styles/docs-chrome.css',
         './src/styles/docs-content.css',
-        './src/styles/catalog-explorer.css',
-        './src/styles/catalog-explorer-table.css',
       ],
       head: [
         {
@@ -213,7 +217,8 @@ export default defineConfig({
     devOnlyRoutes([{ pattern: '/og', entrypoint: './src/dev-pages/og.astro' }]),
     llmsTxtIntegration({
       siteName: 'AgentsMesh',
-      description: 'One config for every AI coding tool, with a shared lessons memory that learns from your repo.',
+      description:
+        'One config for every AI coding tool, with a shared lessons memory that learns from your repo.',
       getSiteUrl: () => docsRoot,
     }),
   ],

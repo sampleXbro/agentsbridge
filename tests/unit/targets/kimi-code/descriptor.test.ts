@@ -74,11 +74,12 @@ describe('kimi-code descriptor', () => {
     expect(managed).not.toContain('.kimi-code');
     expect(descriptor.project.managedOutputs).toEqual({
       dirs: ['.kimi-code/agents', '.kimi-code/skills'],
-      // `.kimi-code/AGENTS.md` is never written but IS evicted: Kimi Code reads
-      // it alongside the root file, so a leftover copy doubles the rules.
-      files: ['AGENTS.md', '.kimi-code/AGENTS.md'],
+      files: ['AGENTS.md'],
       // Kimi Code's own MCP config, in the same directory as config.toml.
       coOwnedFiles: ['.kimi-code/mcp.json'],
+      // `.kimi-code/AGENTS.md` is never written but IS evicted once the root
+      // file is emitted: Kimi Code reads both, so a leftover copy doubles the rules.
+      supersededFiles: ['.kimi-code/AGENTS.md'],
     });
     expect(descriptor.globalSupport!.layout.managedOutputs).toEqual({
       dirs: ['.kimi-code/agents', '.kimi-code/skills'],

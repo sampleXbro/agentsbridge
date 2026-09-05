@@ -54,10 +54,10 @@ const project: TargetLayout = {
   skillDir: '.claude/skills',
   managedOutputs: {
     dirs: ['.claude/agents', '.claude/commands', '.claude/rules', '.claude/skills'],
-    // CLAUDE_NESTED_ROOT is the pre-migration project location; listing it here lets
-    // `cleanupStaleGeneratedOutputs` evict a leftover `.claude/CLAUDE.md` once generation
+    files: [CLAUDE_ROOT, '.claudeignore'],
+    // CLAUDE_NESTED_ROOT is the pre-migration project location: evicted once a run
     // writes the root `CLAUDE.md`, so Claude Code never concatenates both into context.
-    files: [CLAUDE_ROOT, CLAUDE_NESTED_ROOT, '.claudeignore'],
+    supersededFiles: [CLAUDE_NESTED_ROOT],
     // `.mcp.json` is the shared project MCP file teams hand-commit and
     // deepagents-cli writes too; agentsmesh owns only `mcpServers` in it.
     // `.claude/settings.json` is co-owned through the `SETTINGS_JSON_PATHS`

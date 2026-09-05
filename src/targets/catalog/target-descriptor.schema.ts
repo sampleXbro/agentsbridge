@@ -57,9 +57,18 @@ const managedOutputsSchema = z
     dirs: z.array(z.string()),
     files: z.array(z.string()),
     coOwnedFiles: z.array(z.string()).optional(),
+    supersededFiles: z.array(z.string()).optional(),
   })
   .passthrough()
   .superRefine((value, ctx) => {
+    for (const file of value.supersededFiles ?? []) {
+      if (!value.files.includes(file) && !(value.coOwnedFiles ?? []).includes(file)) continue;
+      ctx.addIssue({
+        code: 'custom',
+        path: ['supersededFiles'],
+        message: `"${file}" is in managedOutputs.supersededFiles and another managedOutputs list.`,
+      });
+    }
     for (const file of value.coOwnedFiles ?? []) {
       if (!value.files.includes(file)) continue;
       ctx.addIssue({

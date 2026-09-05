@@ -1,3 +1,4 @@
+import { normalizeTextPayload } from '../../utils/filesystem/fs-text-encoding.js';
 import type { GenerateResult } from '../types.js';
 import { CODEX_CLI_TARGET_ID } from '../../targets/catalog/target-ids.js';
 
@@ -164,7 +165,8 @@ export function refreshResultStatus(result: GenerateResult): GenerateResult {
   const status =
     result.currentContent === undefined
       ? 'created'
-      : result.currentContent !== result.content
+      : normalizeTextPayload(result.path, result.currentContent) !==
+          normalizeTextPayload(result.path, result.content)
         ? 'updated'
         : 'unchanged';
 

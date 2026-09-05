@@ -81,3 +81,14 @@ const EXECUTABLE_SCRIPT_EXTENSIONS = new Set<string>(['.sh', '.bash', '.zsh']);
 export function executableModeFor(path: string): number | undefined {
   return EXECUTABLE_SCRIPT_EXTENSIONS.has(extname(path).toLowerCase()) ? 0o755 : undefined;
 }
+
+/**
+ * The payload as writeFileAtomic lands it on disk: BOM stripped and CRLF
+ * folded to LF for text files, untouched otherwise. Compare or hash through
+ * this so in-memory content and its on-disk form never disagree.
+ */
+export function normalizeTextPayload(path: string, content: string): string {
+  if (!shouldNormalizeLineEndings(path)) return content;
+  const withoutBom = content.startsWith(UTF8_BOM) ? content.slice(UTF8_BOM.length) : content;
+  return normalizeLineEndings(withoutBom);
+}

@@ -19,13 +19,17 @@ const EXCLUDE_DIRS = ['node_modules', '.git', 'dist', 'coverage', '.agentsmesh']
 /**
  * Get project file paths relative to projectRoot, excluding common dirs.
  */
+/** Separator-agnostic: `relative()` yields backslashes on Windows. */
+export function isExcludedProjectPath(rel: string): boolean {
+  const posix = rel.replaceAll('\\', '/');
+  return EXCLUDE_DIRS.some((d) => posix.includes(`/${d}/`) || posix.startsWith(`${d}/`));
+}
+
 async function getProjectFiles(projectRoot: string): Promise<string[]> {
   const all = await readDirRecursive(projectRoot);
-  const filtered = all.filter((p) => {
-    const rel = relative(projectRoot, p);
-    return !EXCLUDE_DIRS.some((d) => rel.includes(`/${d}/`) || rel.startsWith(`${d}/`));
-  });
-  return filtered.map((p) => relative(projectRoot, p));
+  return all
+    .filter((p) => !isExcludedProjectPath(relative(projectRoot, p)))
+    .map((p) => relative(projectRoot, p));
 }
 
 /**

@@ -126,8 +126,59 @@ function mergeLocalConfig(
   if (Array.isArray(local.extends) && local.extends.length > 0) {
     merged.extends = [...(project.extends ?? []), ...local.extends];
   }
+  if (Array.isArray(local.plugins)) {
+    merged.plugins = mergeById(project.plugins, local.plugins);
+  }
+  if (Array.isArray(local.pluginTargets)) {
+    merged.pluginTargets = [...new Set([...project.pluginTargets, ...local.pluginTargets])];
+  }
+  if (
+    typeof local.collaboration === 'object' &&
+    local.collaboration !== null &&
+    !Array.isArray(local.collaboration)
+  ) {
+    merged.collaboration = local.collaboration;
+  }
+  warnUnhandledLocalKeys(local);
 
   return merged as ValidatedConfig;
+}
+
+const LOCAL_KEYS = new Set([
+  'version',
+  'targets',
+  'features',
+  'overrides',
+  'conversions',
+  'extends',
+  'plugins',
+  'pluginTargets',
+  'collaboration',
+]);
+
+function warnUnhandledLocalKeys(local: Record<string, unknown>): void {
+  const unknown = Object.keys(local).filter((key) => !LOCAL_KEYS.has(key));
+  if (unknown.length === 0) return;
+  logger.warn(
+    `agentsmesh.local.yaml: ignoring unknown key(s) ${unknown.join(', ')}; supported keys are ${[...LOCAL_KEYS].join(', ')}.`,
+  );
+}
+
+/** Append local entries; a local entry with an existing id replaces the project one. */
+function mergeById(project: readonly unknown[], local: readonly unknown[]): unknown[] {
+  const byId = new Map<string, unknown>();
+  const anonymous: unknown[] = [];
+  for (const entry of [...project, ...local]) {
+    const id =
+      typeof entry === 'object' &&
+      entry !== null &&
+      typeof (entry as { id?: unknown }).id === 'string'
+        ? (entry as { id: string }).id
+        : undefined;
+    if (id === undefined) anonymous.push(entry);
+    else byId.set(id, entry);
+  }
+  return [...byId.values(), ...anonymous];
 }
 
 export async function loadConfigFromExactDir(

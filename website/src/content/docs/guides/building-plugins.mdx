@@ -358,7 +358,7 @@ You have already seen `project.paths` and `project.managedOutputs` in the minima
 
 | Field | Purpose |
 |-------|---------|
-| `managedOutputs` | `dirs` and `files` AgentsMesh fully manages — stale artifacts are deleted on `generate`. Put a shared config file the user also owns in `coOwnedFiles` instead: it is never deleted, and your `mergeGeneratedOutputContent` hook keeps their content. A path claimed by that hook must not appear in `files`. |
+| `managedOutputs` | `dirs` and `files` AgentsMesh fully manages — stale artifacts are deleted on `generate`. Put a shared config file the user also owns in `coOwnedFiles` instead: it is never deleted, and your `mergeGeneratedOutputContent` hook keeps their content. A path claimed by that hook must not appear in `files`. Use `supersededFiles` for an alternate instruction location your primary root replaces: it is removed whenever a run emits the primary, even on a first run. |
 | `rootInstructionPath` | Path to the primary root instruction file (e.g. `.foo-ide/ROOT.md`) |
 | `skillDir` | Target-native skills directory for skill generation and import |
 | `outputFamilies` | Declared output path families for reference rewriting between targets |

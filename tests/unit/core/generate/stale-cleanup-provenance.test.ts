@@ -103,7 +103,7 @@ describe('directory sweep is gated on previous-run provenance', () => {
     expect(present('.kiro/agents/reviewer.md')).toBe(true);
   });
 
-  it('keeps evicting managedOutputs.files with no provenance (legacy migration)', async () => {
+  it('evicts a superseded nested root once the primary root is emitted, even unprovenanced', async () => {
     rmSync(TEST_ROOT, { recursive: true, force: true });
     seed('CLAUDE.md', 'root');
     seed('.claude/CLAUDE.md', 'legacy');
@@ -117,6 +117,22 @@ describe('directory sweep is gated on previous-run provenance', () => {
 
     expect(present('CLAUDE.md')).toBe(true);
     expect(present('.claude/CLAUDE.md')).toBe(false);
+  });
+
+  it('keeps the superseded nested root when the primary root is not emitted this run', async () => {
+    rmSync(TEST_ROOT, { recursive: true, force: true });
+    seed('.claude/CLAUDE.md', 'hand-written');
+    seed('.claudeignore', 'hand-written');
+
+    await cleanupStaleGeneratedOutputs({
+      projectRoot: TEST_ROOT,
+      targets: ['claude-code'],
+      expectedPaths: [],
+      generatedOutputs: [],
+    });
+
+    expect(present('.claude/CLAUDE.md')).toBe(true);
+    expect(present('.claudeignore')).toBe(true);
   });
 
   it('keeps a co-owned file even when provenance claims it', async () => {

@@ -99,7 +99,10 @@ describe('global mode round-trip: Cursor', () => {
     // 5. Commands (docs: ~/.cursor/commands/*.md)
     fileExists(join(homeDir, '.cursor', 'commands', 'lint.md'));
     fileContains(join(homeDir, '.cursor', 'commands', 'lint.md'), 'Run the linter');
-    markdownHasNoFrontmatter(join(homeDir, '.cursor', 'commands', 'lint.md'));
+    // Cursor command files carry the canonical description as frontmatter.
+    expect(markdownFrontmatter(join(homeDir, '.cursor', 'commands', 'lint.md'))).toHaveProperty(
+      'description',
+    );
 
     // 6. Agents (docs: ~/.cursor/agents/*.md)
     fileExists(join(homeDir, '.cursor', 'agents', 'tester.md'));

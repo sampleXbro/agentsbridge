@@ -52,4 +52,17 @@ describe('lintHooks (cursor)', () => {
     );
     expect(diags).toEqual([]);
   });
+
+  it('warns when a user-authored hook shares a best-effort event with the recall hook', () => {
+    const diags = lintHooks(
+      makeCanonical({
+        PostToolUseFailure: [
+          { matcher: '*', type: 'command', command: 'agentsmesh lessons hook' },
+          { matcher: '*', type: 'command', command: 'echo failed' },
+        ],
+      }),
+    );
+    expect(diags).toHaveLength(1);
+    expect(diags[0]!.message).toContain('PostToolUseFailure');
+  });
 });

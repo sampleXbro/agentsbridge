@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { lintMcp } from '../../../../src/targets/codex-cli/lint.js';
-import type { CanonicalFiles, McpConfig } from '../../../../src/core/types.js';
+import { lintAgents, lintMcp } from '../../../../src/targets/codex-cli/lint.js';
+import type { CanonicalAgent, CanonicalFiles, McpConfig } from '../../../../src/core/types.js';
 
 function makeCanonical(mcp: McpConfig | null): CanonicalFiles {
   return {
@@ -101,5 +101,45 @@ describe('codex-cli lintMcp', () => {
       }),
     );
     expect(out).toHaveLength(2);
+  });
+});
+
+function makeAgent(overrides: Partial<CanonicalAgent> = {}): CanonicalAgent {
+  return {
+    source: '.agentsmesh/agents/reviewer.md',
+    name: 'reviewer',
+    description: 'Reviews code',
+    tools: [],
+    disallowedTools: [],
+    model: '',
+    permissionMode: '',
+    maxTurns: 0,
+    mcpServers: [],
+    hooks: {},
+    skills: [],
+    memory: '',
+    body: 'Review.',
+    ...overrides,
+  };
+}
+
+describe('codex-cli lintAgents', () => {
+  it('returns [] when every agent field has a Codex TOML key', () => {
+    const agents = [makeAgent({ model: 'gpt-5', permissionMode: 'read-only', mcpServers: ['x'] })];
+    expect(lintAgents({ ...makeCanonical(null), agents })).toEqual([]);
+  });
+
+  it('warns once per agent, naming every field the TOML never carries', () => {
+    const agents = [makeAgent({ tools: ['Read', 'Grep'], maxTurns: 3 }), makeAgent({ name: 'b' })];
+    const out = lintAgents({ ...makeCanonical(null), agents });
+    expect(out).toEqual([
+      {
+        level: 'warning',
+        file: '.agentsmesh/agents/reviewer.md',
+        target: 'codex-cli',
+        message:
+          'Codex agent TOML supports name, description, developer_instructions, model, sandbox_mode and mcp_servers; canonical maxTurns, tools are not projected to .codex/agents/reviewer.toml.',
+      },
+    ]);
   });
 });

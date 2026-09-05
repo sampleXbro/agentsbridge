@@ -259,7 +259,7 @@ describe('runLint', () => {
       file: join(TEST_DIR, '.agentsmesh', 'commands', 'review.md'),
       target: 'cursor',
       message:
-        'Cursor command files are plain Markdown; command description and allowed-tools metadata are not projected.',
+        'Cursor command files project only description frontmatter; allowed-tools metadata is not projected.',
     });
     expect(diagnostics).toContainEqual({
       level: 'warning',

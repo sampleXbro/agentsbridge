@@ -22,12 +22,12 @@ export function lintHooks(canonical: CanonicalFiles): LintDiagnostic[] {
 
 export function lintCommands(canonical: CanonicalFiles): LintDiagnostic[] {
   return canonical.commands
-    .filter((command) => command.description.length > 0 || command.allowedTools.length > 0)
+    .filter((command) => command.allowedTools.length > 0)
     .map((command) =>
       createWarning(
         command.source,
         'cursor',
-        'Cursor command files are plain Markdown; command description and allowed-tools metadata are not projected.',
+        'Cursor command files project only description frontmatter; allowed-tools metadata is not projected.',
       ),
     );
 }

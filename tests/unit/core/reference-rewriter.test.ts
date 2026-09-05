@@ -449,7 +449,7 @@ describe('rewriteGeneratedReferences', () => {
     expect(() => resolveOutputCollisions(rewritten)).not.toThrow();
   });
 
-  it('leaves unmapped codex non-root rule references unchanged', () => {
+  it('rewrites references to root-embedded codex rules (no directory glob) to AGENTS.md', () => {
     const projectRoot = '/proj';
     const canonical = makeCanonical(projectRoot);
     canonical.rules[1] = { ...canonical.rules[1]!, globs: [] };
@@ -468,7 +468,7 @@ describe('rewriteGeneratedReferences', () => {
       projectRoot,
     );
 
-    expect(rewritten[0]!.content).toContain('.agentsmesh/rules/typescript.md');
+    expect(rewritten[0]!.content).toBe('See AGENTS.md.');
   });
 
   it('skips outputs that have no canonical text source mapping', () => {

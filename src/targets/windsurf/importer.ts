@@ -33,7 +33,8 @@ import {
 } from './constants.js';
 import { importWorkflows } from './importer-workflows.js';
 import { importSkills } from './skills-adapter.js';
-import { importWindsurfHooks, importWindsurfMcp } from './importer-hooks-mcp.js';
+import { importWindsurfHooks } from './importer-hooks.js';
+import { importWindsurfMcp } from './importer-mcp.js';
 
 /**
  * Import Windsurf config into canonical .agentsmesh/.

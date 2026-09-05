@@ -123,8 +123,20 @@ describe('unmappedDeepagentsHookEvents', () => {
   });
 
   it('excludes best-effort agentsmesh-injected events (PostToolUseFailure has no Deep Agents equivalent but is not user-authored data loss)', () => {
-    const hooks: Hooks = { PostToolUseFailure: [{ matcher: '', command: 'a' }] };
+    const hooks: Hooks = {
+      PostToolUseFailure: [{ matcher: '', command: 'agentsmesh lessons hook' }],
+    };
     expect(unmappedDeepagentsHookEvents(hooks)).toEqual([]);
+  });
+
+  it('flags a best-effort event that carries a user-authored command', () => {
+    const hooks: Hooks = {
+      PostToolUseFailure: [
+        { matcher: '', command: 'agentsmesh lessons hook' },
+        { matcher: '', command: 'echo failed' },
+      ],
+    };
+    expect(unmappedDeepagentsHookEvents(hooks)).toEqual(['PostToolUseFailure']);
   });
 
   it('returns [] when nothing is unmapped', () => {

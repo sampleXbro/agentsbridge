@@ -59,6 +59,11 @@ describe('codex-cli global layout — rewriteGeneratedPath', () => {
     expect(rewrite('AGENTS.md')).toBe('.codex/AGENTS.md');
   });
 
+  it('suppresses root and nested AGENTS.override.md (embedded into .codex/AGENTS.md)', () => {
+    expect(rewrite('AGENTS.override.md')).toBeNull();
+    expect(rewrite('src/AGENTS.override.md')).toBeNull();
+  });
+
   it('keeps .agents/skills/ paths unchanged', () => {
     expect(rewrite('.agents/skills/ts-pro/SKILL.md')).toBe('.agents/skills/ts-pro/SKILL.md');
   });

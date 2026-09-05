@@ -45,13 +45,12 @@ describe('per-target lint.commands hooks', () => {
     expect(diagnostics[0]?.message).toContain('allowed-tools');
   });
 
-  it('warns when cursor commands carry descriptions', () => {
+  it('does not warn when cursor commands carry only a description (projected as frontmatter)', () => {
     const diagnostics = lintCursorCommands(
       makeCanonical([makeCommand({ description: 'Review code' })]),
     );
 
-    expect(diagnostics).toHaveLength(1);
-    expect(diagnostics[0]?.message).toContain('Cursor command files are plain Markdown');
+    expect(diagnostics).toEqual([]);
   });
 
   it('warns when cursor commands carry allowed-tools without descriptions', () => {

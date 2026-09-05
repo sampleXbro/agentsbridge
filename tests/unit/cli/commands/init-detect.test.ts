@@ -41,6 +41,19 @@ describe('detectExistingConfigs', () => {
     expect(result).toContain('claude-code');
   });
 
+  it('does not enroll any target for a lone .mcp.json (agentsmesh writes it for claude-code)', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'agentsmesh-test-'));
+    await writeFile(join(dir, '.mcp.json'), '{}');
+    expect(await detectExistingConfigs(dir)).toStrictEqual([]);
+  });
+
+  it('detects only claude-code for .claude/ plus .mcp.json', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'agentsmesh-test-'));
+    await mkdir(join(dir, '.claude', 'rules'), { recursive: true });
+    await writeFile(join(dir, '.mcp.json'), '{}');
+    expect(await detectExistingConfigs(dir)).toStrictEqual(['claude-code']);
+  });
+
   it('deduplicates results when multiple paths match the same target', async () => {
     const dir = await mkdtemp(join(tmpdir(), 'agentsmesh-test-'));
     // claude-code has multiple detection paths: CLAUDE.md, .claude/rules, .claude/commands

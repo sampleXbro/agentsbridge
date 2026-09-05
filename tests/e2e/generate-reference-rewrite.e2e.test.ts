@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { cleanup, createTestProject } from './helpers/setup.js';
 import { runCli } from './helpers/run-cli.js';
@@ -141,8 +141,11 @@ Prefer strict mode.
 
     const result = await runCli('generate', dir);
     expect(result.exitCode).toBe(0);
-    // typescript.md has no globs here, so it nests under its own slug directory.
-    expect(readFileSync(join(dir, 'AGENTS.md'), 'utf-8')).toContain('typescript/AGENTS.md');
+    // typescript.md has no globs here, so it is embedded in the root AGENTS.md (no slug dir).
+    const root = readFileSync(join(dir, 'AGENTS.md'), 'utf-8');
+    expect(root).toContain('Prefer strict mode.');
+    expect(root).not.toContain('typescript/AGENTS.md');
+    expect(existsSync(join(dir, 'typescript'))).toBe(false);
   });
 
   it('rewrites skill directory references across all generated root artifacts', async () => {

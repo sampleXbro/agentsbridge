@@ -6,15 +6,12 @@
  * docs/agent-structures/codex-cli-project-level-advanced.md §2.1, §6.2, §11).
  * `{dir}` is derived from the first glob with a usable directory prefix; when
  * no glob yields one (no globs, a root-wildcard glob, or an ambiguous/unsafe
- * glob), the rule's own slug is used as the directory name instead.
+ * glob), the rule belongs to the project root: it is embedded in the root
+ * `AGENTS.md` (or written to the root `AGENTS.override.md`). A directory named
+ * after the rule would be one Codex never walks.
  */
 
-import { basename } from 'node:path';
 import type { CanonicalRule } from '../../core/types.js';
-
-function ruleSlug(source: string): string {
-  return basename(source, '.md');
-}
 
 /** A single path segment containing a glob metacharacter. */
 const GLOB_METACHAR = /[*?[\]]/;
@@ -43,20 +40,20 @@ function directoryFromGlob(glob: string): string | null {
   return dirSegments.length > 0 ? dirSegments.join('/') : null;
 }
 
-/** Directory a scoped rule nests under: first glob with a usable prefix, else the rule's slug. */
-export function codexRuleDirectory(rule: Pick<CanonicalRule, 'source' | 'globs'>): string {
+/** Directory a scoped rule nests under (first glob with a usable prefix), or `null` for root. */
+export function codexRuleDirectory(rule: Pick<CanonicalRule, 'globs'>): string | null {
   for (const glob of rule.globs) {
     const dir = directoryFromGlob(glob);
     if (dir) return dir;
   }
-  return ruleSlug(rule.source);
+  return null;
 }
 
-/** Nested `AGENTS.md` (or `AGENTS.override.md`) path Codex's directory walk actually loads. */
+/** `AGENTS.md` (or `AGENTS.override.md`) path Codex's directory walk actually loads. */
 export function codexNestedAgentsPath(
-  rule: Pick<CanonicalRule, 'source' | 'globs' | 'codexInstructionVariant'>,
+  rule: Pick<CanonicalRule, 'globs' | 'codexInstructionVariant'>,
 ): string {
   const dir = codexRuleDirectory(rule);
   const filename = rule.codexInstructionVariant === 'override' ? 'AGENTS.override.md' : 'AGENTS.md';
-  return `${dir}/${filename}`;
+  return dir === null ? filename : `${dir}/${filename}`;
 }

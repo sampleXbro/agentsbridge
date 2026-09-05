@@ -24,7 +24,7 @@ import {
 } from './constants.js';
 import { importFromCodex } from './importer.js';
 import { lintRules } from './linter.js';
-import { lintMcp, lintHooks } from './lint.js';
+import { lintAgents, lintMcp, lintHooks } from './lint.js';
 import { buildCodexCliImportPaths } from '../../core/reference/import-map-builders.js';
 import { shouldConvertCommandsToSkills } from '../../config/core/conversions.js';
 import { codexNestedAgentsPath } from './codex-rule-paths.js';
@@ -42,6 +42,7 @@ export const target: TargetGenerators = {
   generateMcp,
   generateHooks,
   generatePermissions,
+  lint: lintAgents,
   importFrom: importFromCodex,
 };
 
@@ -101,10 +102,11 @@ const globalLayout: TargetLayout = {
   },
   rewriteGeneratedPath(path) {
     if (path === AGENTS_MD) return CODEX_GLOBAL_AGENTS_MD;
-    // Advisory rules nest as `<dir>/AGENTS(.override).md` at project scope (see
-    // codex-rule-paths.ts); global scope embeds them into CODEX_GLOBAL_AGENTS_MD
-    // instead (renderCodexGlobalInstructions), so nested paths are suppressed here.
-    if (/\/AGENTS(\.override)?\.md$/.test(path)) return null;
+    // Advisory rules nest as `<dir>/AGENTS(.override).md` or the root
+    // `AGENTS.override.md` at project scope (see codex-rule-paths.ts); global
+    // scope embeds them into CODEX_GLOBAL_AGENTS_MD instead
+    // (renderCodexGlobalInstructions), so those paths are suppressed here.
+    if (/(^|\/)AGENTS(\.override)?\.md$/.test(path)) return null;
     if (path.startsWith(`${CODEX_INSTRUCTIONS_DIR}/`)) return null;
     return path;
   },

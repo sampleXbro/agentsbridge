@@ -33,7 +33,7 @@ import { mirrorSkillsToAgents } from '../catalog/skill-mirror.js';
 import { importFromWindsurf } from './importer.js';
 import { mergeWindsurfOutput } from './merge.js';
 import { lintRules } from './linter.js';
-import { lintCommands, lintMcp, lintPermissions } from './lint.js';
+import { lintCommands, lintHooks, lintMcp, lintPermissions } from './lint.js';
 import { buildWindsurfImportPaths } from '../../core/reference/import-map-builders.js';
 import { shouldConvertAgentsToSkills } from '../../config/core/conversions.js';
 import { projectedAgentSkillDirName } from '../projection/projected-agent-skill.js';
@@ -188,6 +188,7 @@ export const descriptor = {
   lintRules,
   lint: {
     commands: lintCommands,
+    hooks: lintHooks,
     mcp: lintMcp,
     permissions: lintPermissions,
   },

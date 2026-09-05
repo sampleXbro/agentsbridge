@@ -2,6 +2,7 @@
  * Parse .agentsmesh/commands/*.md into CanonicalCommand objects.
  */
 
+import { isEmptyCanonicalFile } from './empty-file.js';
 import { basename } from 'node:path';
 import type { CanonicalCommand } from '../../core/types.js';
 import { readFileSafe, readDirRecursiveNoSymlinks } from '../../utils/filesystem/fs.js';
@@ -60,7 +61,8 @@ export async function parseCommands(
   const commands: CanonicalCommand[] = [];
   for (const path of mdFiles) {
     const content = await readFileSafe(path);
-    if (!content) continue;
+    if (content === null) continue;
+    if (isEmptyCanonicalFile(content, path)) continue;
     const parsed = parseOrSkipFrontmatter(content, path, opts.onParseError);
     if (!parsed) continue;
     const { frontmatter, body } = parsed;

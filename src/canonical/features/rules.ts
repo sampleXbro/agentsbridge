@@ -2,6 +2,7 @@
  * Parse .agentsmesh/rules/*.md into CanonicalRule objects.
  */
 
+import { isEmptyCanonicalFile } from './empty-file.js';
 import { basename } from 'node:path';
 import type { CanonicalRule } from '../../core/types.js';
 import { readFileSafe, readDirRecursiveNoSymlinks } from '../../utils/filesystem/fs.js';
@@ -63,7 +64,8 @@ export async function parseRules(
   const rules: CanonicalRule[] = [];
   for (const path of mdFiles) {
     const content = await readFileSafe(path);
-    if (!content) continue;
+    if (content === null) continue;
+    if (isEmptyCanonicalFile(content, path)) continue;
     const parsed = parseOrSkipFrontmatter(content, path, opts.onParseError);
     if (!parsed) continue;
     const { frontmatter, body } = parsed;

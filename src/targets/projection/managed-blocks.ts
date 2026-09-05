@@ -1,3 +1,4 @@
+import { splitFrontmatter } from '../../utils/text/markdown.js';
 import { basename, join } from 'node:path';
 import type { CanonicalRule } from '../../core/types.js';
 
@@ -64,10 +65,10 @@ export function stripManagedBlock(content: string, start: string, end: string): 
  * when there is no frontmatter.
  */
 function splitFrontmatterPrefix(content: string): { prefix: string; body: string } {
-  if (content.indexOf('---') !== 0) return { prefix: '', body: content.trim() };
-  const close = content.indexOf('---', 3);
-  if (close === -1) return { prefix: '', body: content.trim() };
-  return { prefix: content.slice(0, close + 3), body: content.slice(close + 3).trim() };
+  const split = splitFrontmatter(content);
+  return split === null
+    ? { prefix: '', body: content.trim() }
+    : { prefix: split.prefix, body: split.body };
 }
 
 /**

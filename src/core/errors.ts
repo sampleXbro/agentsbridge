@@ -57,6 +57,24 @@ export class ConfigValidationError extends AgentsMeshError {
   }
 }
 
+/** A user-authored canonical file (mcp.json, permissions.yaml, hooks.yaml) has a syntax error. */
+export class CanonicalParseError extends AgentsMeshError {
+  readonly path: string;
+
+  constructor(path: string, cause: unknown) {
+    const detail = cause instanceof Error ? cause.message : String(cause);
+    super(
+      'AM_CONFIG_INVALID',
+      `Invalid canonical file ${path}: ${detail}. Fix the syntax and try again.`,
+      {
+        cause,
+      },
+    );
+    this.name = 'CanonicalParseError';
+    this.path = path;
+  }
+}
+
 export class TargetNotFoundError extends AgentsMeshError {
   readonly target: string;
 

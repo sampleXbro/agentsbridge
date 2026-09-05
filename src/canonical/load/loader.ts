@@ -37,9 +37,9 @@ export async function loadCanonicalFiles(
     parseCommands(join(canonicalDir, 'commands'), opts),
     parseAgents(join(canonicalDir, 'agents'), opts),
     parseSkills(join(canonicalDir, 'skills'), opts),
-    parseMcp(join(canonicalDir, 'mcp.json')),
-    parsePermissions(join(canonicalDir, 'permissions.yaml')),
-    parseHooks(join(canonicalDir, 'hooks.yaml')),
+    parseMcp(join(canonicalDir, 'mcp.json'), opts.onParseError),
+    parsePermissions(join(canonicalDir, 'permissions.yaml'), opts.onParseError),
+    parseHooks(join(canonicalDir, 'hooks.yaml'), opts.onParseError),
     parseIgnore(join(canonicalDir, 'ignore')),
   ]);
 

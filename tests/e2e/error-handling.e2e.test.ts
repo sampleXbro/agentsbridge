@@ -58,12 +58,14 @@ describe('error-handling', () => {
     expect(r.stderr).toMatch(/Invalid|enum|feature|rules|commands/i);
   });
 
-  // Lib returns null on invalid MCP JSON (graceful degradation), so generate succeeds
-  it('corrupted MCP JSON — invalid JSON in mcp.json → lib tolerates (returns null)', async () => {
+  // A broken canonical file is never treated as absent: a stray syntax error must
+  // not silently drop every MCP server from every tool.
+  it('corrupted MCP JSON — invalid JSON in mcp.json → exit 1, stderr names the file', async () => {
     dir = createTestProject('canonical-full');
     writeFileSync(join(dir, '.agentsmesh', 'mcp.json'), '{ invalid json');
     const r = await runCli('generate', dir);
-    expect(r.exitCode).toBe(0); // parseMcp returns null on parse error, no throw
+    expect(r.exitCode).toBe(1);
+    expect(r.stderr).toMatch(/mcp\.json/);
   });
 
   it('invalid frontmatter — rule with unclosed YAML array → exit 1, stderr points to error', async () => {

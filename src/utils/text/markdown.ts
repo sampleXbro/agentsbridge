@@ -11,18 +11,43 @@ export function parseFrontmatter(content: string): {
   frontmatter: Record<string, unknown>;
   body: string;
 } {
-  const open = content.indexOf('---');
-  if (open !== 0) {
-    return { frontmatter: {}, body: content.trim() };
-  }
-  const close = content.indexOf('---', 3);
-  if (close === -1) {
-    return { frontmatter: {}, body: content.trim() };
-  }
-  const yamlStr = content.slice(3, close).trim();
-  const body = content.slice(close + 3).trim();
+  const split = splitFrontmatter(content);
+  if (split === null) return { frontmatter: {}, body: content.trim() };
+  const yamlStr = split.yaml.trim();
   const frontmatter = yamlStr === '' ? {} : ((yamlParse(yamlStr) as Record<string, unknown>) ?? {});
-  return { frontmatter, body };
+  return { frontmatter, body: split.body };
+}
+
+const OPENER = /^---[ \t]*\r?\n/;
+const CLOSER = /^---[ \t]*\r?$/m;
+
+export interface FrontmatterSplit {
+  /** Raw YAML between the delimiters (may be empty). */
+  yaml: string;
+  /** Trimmed content after the closing delimiter line. */
+  body: string;
+  /** Byte-exact `---…---` block, for callers that re-emit it verbatim. */
+  prefix: string;
+}
+
+/**
+ * Locate a leading frontmatter block. Both delimiters must be lines of their
+ * own: a `---` inside a value (`description: a --- b`) is content, not a close.
+ * Returns null when there is no complete block.
+ */
+export function splitFrontmatter(content: string): FrontmatterSplit | null {
+  const opener = OPENER.exec(content);
+  if (opener === null) return null;
+  const yamlStart = opener[0].length;
+  const closer = CLOSER.exec(content.slice(yamlStart));
+  if (closer === null) return null;
+  const closeStart = yamlStart + closer.index;
+  const closeEnd = closeStart + closer[0].length;
+  return {
+    yaml: content.slice(yamlStart, closeStart),
+    body: content.slice(closeEnd).trim(),
+    prefix: content.slice(0, closeEnd),
+  };
 }
 
 export type FrontmatterParseResult =
@@ -34,10 +59,7 @@ export type FrontmatterParseResult =
  * lenient path so a YAML-parse failure can still return a clean body.
  */
 function extractBody(content: string): string {
-  if (content.indexOf('---') !== 0) return content.trim();
-  const close = content.indexOf('---', 3);
-  if (close === -1) return content.trim();
-  return content.slice(close + 3).trim();
+  return splitFrontmatter(content)?.body ?? content.trim();
 }
 
 /**

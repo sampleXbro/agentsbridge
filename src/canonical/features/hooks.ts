@@ -2,6 +2,7 @@
  * Parse .agentsmesh/hooks.yaml into Hooks.
  */
 
+import { failSyntax, type ParseErrorCallback } from './syntax-error.js';
 import { parse as parseYaml } from 'yaml';
 import { readFileSafe } from '../../utils/filesystem/fs.js';
 import type { HookEntry, Hooks } from '../../core/types.js';
@@ -37,15 +38,18 @@ function toHookEntry(raw: unknown): HookEntry | null {
  * @param hooksPath - Absolute path to .agentsmesh/hooks.yaml
  * @returns Hooks or null if file missing or malformed
  */
-export async function parseHooks(hooksPath: string): Promise<Hooks | null> {
+export async function parseHooks(
+  hooksPath: string,
+  onParseError?: ParseErrorCallback,
+): Promise<Hooks | null> {
   const content = await readFileSafe(hooksPath);
   if (content === null) return null;
   if (!content.trim()) return {};
   let parsed: unknown;
   try {
     parsed = parseYaml(content) as unknown;
-  } catch {
-    return null;
+  } catch (err) {
+    return failSyntax(hooksPath, err, onParseError);
   }
   if (!parsed || typeof parsed !== 'object') return null;
   const result: Hooks = {};

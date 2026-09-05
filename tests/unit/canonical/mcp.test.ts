@@ -109,10 +109,9 @@ describe('parseMcp', () => {
     expect(result).toBeNull();
   });
 
-  it('returns null for malformed JSON', async () => {
+  it('rejects malformed JSON', async () => {
     writeMcp('{ invalid json');
-    const result = await parseMcp(MCP_PATH);
-    expect(result).toBeNull();
+    await expect(parseMcp(MCP_PATH)).rejects.toMatchObject({ code: 'AM_CONFIG_INVALID' });
   });
 
   it('returns null for empty mcpServers', async () => {

@@ -85,11 +85,10 @@ PostToolUse:
     expect(result).toBeNull();
   });
 
-  it('returns null for malformed YAML', async () => {
+  it('rejects malformed YAML', async () => {
     const path = join(TEST_DIR, 'hooks.yaml');
     writeFileSync(path, 'PreToolUse: [broken: yaml');
-    const result = await parseHooks(path);
-    expect(result).toBeNull();
+    await expect(parseHooks(path)).rejects.toMatchObject({ code: 'AM_CONFIG_INVALID' });
   });
 
   it('filters entries without matcher', async () => {

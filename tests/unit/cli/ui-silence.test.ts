@@ -10,6 +10,21 @@ const clackMock = vi.hoisted(() => ({
 }));
 vi.mock('@clack/prompts', () => clackMock);
 
+// `main()` must be exercised without a real command: routing `matrix` here read
+// this repo's own agentsmesh.yaml, resolved its remote `extends`, and cloned a
+// private repository — so the test passed only on a machine with credentials
+// for it and failed on every CI runner.
+vi.mock('../../../src/cli/command-handlers.js', () => ({
+  cmdHandlers: {
+    probe: async (): Promise<void> => {
+      const { ui: liveUi } = await import('../../../src/cli/ui/ui.js');
+      liveUi.intro('decorative banner');
+      liveUi.spinner().start('working');
+      process.stdout.write(JSON.stringify({ success: true, command: 'probe', data: null }));
+    },
+  },
+}));
+
 import { configureUi, silenceUi, ui } from '../../../src/cli/ui/ui.js';
 import { main } from '../../../src/cli/index.js';
 
@@ -42,12 +57,13 @@ describe('ui silencing', () => {
     });
     const exit = vi.spyOn(process, 'exit').mockImplementation(() => undefined as never);
     try {
-      await main({ command: 'matrix', flags: { json: true }, args: [] });
+      await main({ command: 'probe', flags: { json: true }, args: [] });
     } finally {
       spy.mockRestore();
       exit.mockRestore();
     }
     expect(clackMock.intro).not.toHaveBeenCalled();
-    expect(() => JSON.parse(writes.join(''))).not.toThrow();
+    expect(clackMock.spinner).not.toHaveBeenCalled();
+    expect(JSON.parse(writes.join(''))).toMatchObject({ success: true, command: 'probe' });
   });
 });

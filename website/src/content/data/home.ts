@@ -161,11 +161,15 @@ export const HOME_FAQ: readonly HomeFaq[] = [
   },
   {
     question: 'Is AgentsMesh free?',
-    answer: 'Yes. It is open source under the MIT license, with no hosted service and telemetry off by default.',
+    answer:
+      'Yes. It is open source under the MIT license, with no hosted service and telemetry off by default.',
   },
 ];
 
 /** Output paths drawn on the hero mesh. Decorative; the matrix page is the source of truth. */
+/** The return path in the hero mesh: what the tools learn flows back into `.agentsmesh/`. */
+export const HOME_MESH_LOOP: { readonly label: string } = { label: 'lessons' };
+
 export const HOME_MESH_TARGETS: readonly string[] = [
   'CLAUDE.md',
   '.cursor/rules/',

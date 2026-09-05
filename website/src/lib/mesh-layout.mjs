@@ -43,3 +43,31 @@ function spread(count, from, to) {
   const step = (to - from) / (count - 1);
   return Array.from({ length: count }, (_, i) => from + i * step);
 }
+
+/** @typedef {{ node: Point, path: string }} MeshLoop */
+
+/**
+ * The lessons return loop. A rail runs from the top target straight down
+ * through every target node, so each tool is on the path; from the bottom
+ * target it sweeps under the fan through a node on `laneY` and lands on the
+ * underside of the source. Pulses travel it in reverse of the fan, which is the
+ * point: what every tool learns flows back into `.agentsmesh/`.
+ * @param {MeshLayout} layout
+ * @param {number} laneY
+ * @param {number} [sourceInset] distance below the source centre to land on
+ * @returns {MeshLoop | null}
+ */
+export function meshReturnLoop(layout, laneY, sourceInset = 0) {
+  const first = layout.targets[0];
+  const last = layout.targets.at(-1);
+  if (first === undefined || last === undefined) return null;
+  const { source } = layout;
+  const node = { x: (source.x + last.x) / 2, y: laneY };
+  const reach = (last.x - source.x) / 4;
+  const landing = { x: source.x, y: source.y + sourceInset };
+  const rail = first === last ? '' : ` L ${last.x} ${last.y}`;
+  const path =
+    `M ${first.x} ${first.y}${rail} C ${last.x} ${laneY}, ${node.x + reach} ${laneY}, ${node.x} ${node.y} ` +
+    `C ${node.x - reach} ${laneY}, ${landing.x} ${laneY}, ${landing.x} ${landing.y}`;
+  return { node, path };
+}

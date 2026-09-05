@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.34.0
+
+### Minor Changes
+
+- d942093: A repo-wide bug hunt across the generation pipeline, canonical loader, CLI parser, MCP server, lessons memory, install routing and the per-target adapters. Several fixes change behaviour you may have been working around, so those are called out below.
+
+  **Fixed — silent data loss.** `agentsmesh generate` no longer deletes a hand-written `AGENTS.md`, `CLAUDE.md` or `.claudeignore` on its first run in a project: a static output is only evicted when the lock proves agentsmesh wrote it. Uninstalling the last pack now sweeps the files it generated and resets the lock, instead of leaving orphans that `agentsmesh check` reported as in sync. The lessons git merge driver no longer drops a captured rule when two branches mint the same lesson id. A `---` inside rule frontmatter no longer truncates the value and leaks the remainder into every generated file, and CRLF canonical sources stop reporting a permanent phantom diff.
+
+  **Fixed — a broken canonical file is no longer treated as an absent one.** A syntax error in `.agentsmesh/mcp.json`, `permissions.yaml` or `hooks.yaml` was caught and returned as "nothing here", so `generate` succeeded while every MCP server, permission or hook silently vanished from every tool. These now fail with the offending file path; `agentsmesh install` still skips a broken file in third-party content and warns.
+
+  **Fixed — CLI argument parsing.** `--flag=value` is honored everywhere; it was previously stored under a bogus key and ignored, so `agentsmesh generate --targets=cursor` wrote every target. Boolean flags no longer consume the following word, so `agentsmesh refresh --dry-run <pack>` previews instead of performing a real refresh, and `agentsmesh installs --global list` reports the global inventory. `--json` output stays parseable on a TTY, and `agentsmesh lessons --help` lists the implemented `--always`, `--session`, `--no-dedup`, `--ids` and `--scope` flags.
+
+  **Fixed — install and refresh.** `agentsmesh install <source> --global` writes to `~/.agentsmesh/` when the picker routes the install, and `--accept-hooks`, `--accept-permissions` and `--accept-mcp` now reach marketplace sub-packs. One invalid row in `installs.yaml` no longer truncates the file on the next write, GitLab SSH sources keep their org and repo, remote cache keys can no longer collide between two repositories, and an install lock whose holder is still running is not evicted.
+
+  **Fixed — per-target adapters.** Windsurf hook events survive a round trip instead of arriving as dead `session_start` keys in other tools, and an imported hook keeps its canonical matcher. Cursor command files carry their `description` as frontmatter, so it survives generate and import. An unscoped Codex rule embeds into the root `AGENTS.md` rather than creating a top-level directory Codex never reads. A lone `.mcp.json` no longer enrolls Deep Agents CLI in every Claude Code repository. A user-authored `UserPromptSubmit` hook now warns instead of disappearing on targets that cannot carry it.
+
+  **Changed — lessons recall precision.** Keyword triggers match whole tokens, so a rule keyed on `art` no longer fires on "start". Recall ranks by how precisely a trigger matched: an exact path beats a file class, which beats a subtree glob, which beats a keyword that only matched through the path's own tokens. `agentsmesh lessons add` rejects an empty rule and a command pattern that matches nearly every command, and `agentsmesh lessons validate` reports `BROAD_FILE_GLOB`, `BROAD_COMMAND_PATTERN` and `EMPTY_RULE` for graphs captured before those guardrails existed.
+
+  **Added — plugin descriptors.** `managedOutputs.supersededFiles` declares alternate instruction locations that your primary root replaces; they are evicted only when a run emits that root, which is how a legacy nested file is migrated without deleting user content. `agentsmesh.local.yaml` now merges `plugins`, `pluginTargets` and `collaboration` instead of dropping them, and warns about keys it does not handle.
+
 ## 0.33.0
 
 ### Minor Changes

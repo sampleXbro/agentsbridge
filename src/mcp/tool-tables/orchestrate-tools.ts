@@ -27,15 +27,16 @@ export const ORCHESTRATE_TOOL_DESCRIPTORS: ToolDescriptor[] = [
     name: 'generate',
     description:
       'Generate target-native config files from canonical .agentsmesh/ content. Propagates rules, commands, agents, skills, MCP, hooks, ignore, and permissions to all configured targets.',
-    inputSchema: z.object({
-      targets: z
-        .array(z.string())
-        .optional()
-        .describe('Filter to specific targets (default: all from agentsmesh.yaml)'),
-      features: z.array(z.string()).optional().describe('Filter to specific features'),
-      verbose: z.boolean().optional().describe('Include full file list in response'),
-      dry_run: z.boolean().optional().describe('Preview without writing files'),
-    }),
+    inputSchema: z
+      .object({
+        targets: z
+          .array(z.string())
+          .optional()
+          .describe('Filter to specific targets (default: all from agentsmesh.yaml)'),
+        verbose: z.boolean().optional().describe('Include full file list in response'),
+        dry_run: z.boolean().optional().describe('Preview without writing files'),
+      })
+      .strict(),
     handler: (ctx, i) => orchestrateHandlers.generate(ctx, i as never),
   },
   {
@@ -60,10 +61,11 @@ export const ORCHESTRATE_TOOL_DESCRIPTORS: ToolDescriptor[] = [
   {
     name: 'diff',
     description: 'Preview what generate would create, modify, or delete without writing',
-    inputSchema: z.object({
-      targets: z.array(z.string()).optional().describe('Filter to specific targets'),
-      features: z.array(z.string()).optional().describe('Filter to specific features'),
-    }),
+    inputSchema: z
+      .object({
+        targets: z.array(z.string()).optional().describe('Filter to specific targets'),
+      })
+      .strict(),
     handler: (ctx, i) => orchestrateHandlers.diff(ctx, i as never),
   },
   {

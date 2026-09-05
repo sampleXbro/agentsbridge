@@ -2,6 +2,8 @@ import { resolve, dirname } from 'node:path';
 import { stat } from 'node:fs/promises';
 import { McpError } from './errors.js';
 import { loadCanonicalFiles } from '../canonical/load/loader.js';
+import { loadConfigFromExactDir } from '../config/core/loader.js';
+import { bootstrapPlugins } from '../plugins/bootstrap-plugins.js';
 import type { CanonicalFiles } from '../core/types.js';
 
 export interface McpContext {
@@ -24,8 +26,28 @@ async function findProjectRoot(start: string): Promise<string> {
   }
 }
 
+const pluginRoots = new Set<string>();
+
+/**
+ * Register the project's plugin targets once per root, as the CLI does at
+ * startup, so MCP tools see them. Plugins are optional: a config or plugin
+ * failure is reported on stderr and never blocks the server.
+ */
+async function loadProjectPlugins(projectRoot: string): Promise<void> {
+  if (pluginRoots.has(projectRoot)) return;
+  pluginRoots.add(projectRoot);
+  try {
+    const { config } = await loadConfigFromExactDir(projectRoot);
+    await bootstrapPlugins(config, projectRoot);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    process.stderr.write(`agentsmesh mcp: plugins not loaded: ${message}\n`);
+  }
+}
+
 export async function resolveContext(opts: { cwd: string }): Promise<McpContext> {
   const projectRoot = await findProjectRoot(opts.cwd);
+  await loadProjectPlugins(projectRoot);
   return {
     projectRoot,
     loadCanonical: () => loadCanonicalFiles(projectRoot),

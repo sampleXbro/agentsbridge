@@ -1,25 +1,22 @@
 import { McpError } from '../errors.js';
-import { SUPPORT_MATRIX } from '../../core/matrix/data.js';
-import { TARGET_IDS } from '../../targets/catalog/target-ids.js';
+import { getTargetCapabilities } from '../../targets/catalog/builtin-targets.js';
+import { getAllRegisteredDescriptorIds } from '../../targets/catalog/registry.js';
 
 type TargetCapabilityMap = Record<string, unknown>;
 type TargetCapabilitiesRecord = Record<string, TargetCapabilityMap>;
 
+/**
+ * Built per call, not at import time: plugin descriptors register after the
+ * server starts, and the MCP surface must see them like any builtin target.
+ */
 function buildTargetIndex(): TargetCapabilitiesRecord {
   return Object.fromEntries(
-    TARGET_IDS.map((targetId) => [
-      targetId,
-      Object.fromEntries(
-        Object.entries(SUPPORT_MATRIX).map(([feature, targets]) => [
-          feature,
-          (targets as Record<string, unknown>)[targetId],
-        ]),
-      ),
-    ]),
+    getAllRegisteredDescriptorIds().flatMap((targetId) => {
+      const caps = getTargetCapabilities(targetId, 'project');
+      return caps === undefined ? [] : [[targetId, caps]];
+    }),
   );
 }
-
-const TARGET_INDEX: TargetCapabilitiesRecord = buildTargetIndex();
 
 export interface TargetCapabilitiesEntry {
   targetId: string;
@@ -28,10 +25,10 @@ export interface TargetCapabilitiesEntry {
 
 export const capabilitiesHandlers = {
   async list(): Promise<TargetCapabilitiesRecord> {
-    return TARGET_INDEX;
+    return buildTargetIndex();
   },
   async get(input: { targetId: string }): Promise<TargetCapabilitiesEntry> {
-    const entry = TARGET_INDEX[input.targetId];
+    const entry = buildTargetIndex()[input.targetId];
     if (entry === undefined) {
       throw new McpError('NOT_FOUND', `unknown target: ${input.targetId}`);
     }

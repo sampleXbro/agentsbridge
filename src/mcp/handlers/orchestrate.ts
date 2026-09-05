@@ -26,7 +26,7 @@ export type {
 
 async function generate(
   ctx: McpContext,
-  input: { targets?: string[]; features?: string[]; verbose?: boolean; dry_run?: boolean },
+  input: { targets?: string[]; verbose?: boolean; dry_run?: boolean },
 ): Promise<GenerateHandlerResult> {
   try {
     // Delegate to the CLI generate so the MCP path stays byte-for-byte
@@ -119,10 +119,7 @@ async function check(ctx: McpContext): Promise<CheckHandlerResult> {
   }
 }
 
-async function diff(
-  ctx: McpContext,
-  input: { targets?: string[]; features?: string[] },
-): Promise<DiffHandlerResult> {
+async function diff(ctx: McpContext, input: { targets?: string[] }): Promise<DiffHandlerResult> {
   try {
     const pctx = await loadProjectContext(ctx.projectRoot);
     const targetFilter = input.targets && input.targets.length > 0 ? input.targets : undefined;

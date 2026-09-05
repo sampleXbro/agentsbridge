@@ -8,7 +8,8 @@ import {
 } from '@modelcontextprotocol/sdk/types.js';
 import { TOOL_DESCRIPTORS, RESOURCE_DESCRIPTORS, zodToMcpSchema } from './register.js';
 import { resolveContext } from './context.js';
-import { McpError, redactAbsolutePaths } from './errors.js';
+import { readResource, toMcpError } from './resources.js';
+import { McpError } from './errors.js';
 import { enrichValidationIssues } from './validation-errors.js';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
@@ -32,19 +33,6 @@ async function pkgVersion(): Promise<string> {
     }
   }
   return '0.0.0';
-}
-
-function matchTemplate(template: string, actual: string): boolean {
-  const re = new RegExp('^' + template.replace(/\{[^}]+\}/g, '([^/]+)') + '$');
-  return re.test(actual);
-}
-
-function extractTemplateParams(template: string, actual: string): Record<string, string> {
-  const keys = [...template.matchAll(/\{([^}]+)\}/g)].map((m) => m[1]!);
-  const re = new RegExp('^' + template.replace(/\{[^}]+\}/g, '([^/]+)') + '$');
-  const m = re.exec(actual);
-  if (!m) return {};
-  return Object.fromEntries(keys.map((k, i) => [k, m[i + 1]!]));
 }
 
 export async function startServer(): Promise<void> {
@@ -87,13 +75,7 @@ export async function startServer(): Promise<void> {
       const result = await desc.handler(ctx, parsed.data);
       return { content: [{ type: 'text' as const, text: JSON.stringify(result) }] };
     } catch (e) {
-      const env =
-        e instanceof McpError
-          ? e.toEnvelope()
-          : {
-              code: 'IO_ERROR' as const,
-              message: redactAbsolutePaths(e instanceof Error ? e.message : 'unknown error'),
-            };
+      const env = toMcpError(e).toEnvelope();
       return {
         isError: true,
         content: [{ type: 'text' as const, text: JSON.stringify(env) }],
@@ -110,13 +92,9 @@ export async function startServer(): Promise<void> {
   }));
 
   server.setRequestHandler(ReadResourceRequestSchema, async (req) => {
-    const desc = RESOURCE_DESCRIPTORS.find(
-      (r) => r.uri === req.params.uri || matchTemplate(r.uri, req.params.uri),
+    const data = await readResource(RESOURCE_DESCRIPTORS, req.params.uri, () =>
+      resolveContext({ cwd: process.cwd() }),
     );
-    if (!desc) throw new McpError('NOT_FOUND', `resource not found: ${req.params.uri}`);
-    const ctx = await resolveContext({ cwd: process.cwd() });
-    const params = extractTemplateParams(desc.uri, req.params.uri);
-    const data = await desc.read(ctx, params);
     return {
       contents: [{ uri: req.params.uri, mimeType: 'application/json', text: JSON.stringify(data) }],
     };

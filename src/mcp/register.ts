@@ -36,5 +36,6 @@ export const RESOURCE_DESCRIPTORS: ResourceDescriptor[] = TOOL_DESCRIPTORS.filte
   uri: d.resourceUri!,
   name: d.name,
   description: d.description,
+  inputSchema: d.inputSchema,
   read: (ctx, params) => d.handler(ctx, params),
 }));

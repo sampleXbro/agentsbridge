@@ -26,7 +26,6 @@ import LinkGrid from '../../components/home/LinkGrid.astro';
 import LessonsLoop from '../../components/home/LessonsLoop.astro';
 import ToolWall from '../../components/home/ToolWall.astro';
 import Faq from '../../components/home/Faq.astro';
-import CatalogExplorer from '../../components/catalog-explorer/CatalogExplorer.astro';
 import SoftwareApplicationJsonLd from '../../components/SoftwareApplicationJsonLd.astro';
 
 <Section
@@ -68,17 +67,6 @@ agentsmesh lessons query --file src/cli/foo.ts
 ```
 
   </LessonsLoop>
-</Section>
-
-<Section
-  id="catalog"
-  eyebrow="Community catalog"
-  title="Install skills, agents and commands"
-  lead="From GitHub, GitLab, any git URL or a local path. Packs land in `.agentsmesh/packs/` and merge at generate time."
-  align="center"
-  more={{ text: 'Skill-pack guide', href: './guides/installing-skill-packs/' }}
->
-  <CatalogExplorer />
 </Section>
 
 <Section

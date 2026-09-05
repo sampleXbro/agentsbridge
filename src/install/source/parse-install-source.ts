@@ -102,6 +102,8 @@ export async function parseInstallSource(
     return {
       kind: 'gitlab',
       rawRef: 'HEAD',
+      org: p.namespace,
+      repo: p.project,
       gitRemoteUrl: `https://gitlab.com/${p.namespace}/${p.project}.git`,
       pathInRepo: pathFlag,
     };

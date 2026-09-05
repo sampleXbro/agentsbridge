@@ -6,8 +6,10 @@
  * cross-process mutex without any third-party dependency.
  *
  * Stale recovery: the holder writes its PID and start timestamp into the lock
- * dir. On contention we peek at the PID; if the process is gone or the lock is
- * older than `staleMs`, we evict it and retry.
+ * dir. On contention we peek at the PID: a dead same-host holder is evicted at
+ * once. A live holder (or one on another host, whose PID we cannot probe) is
+ * evicted only past `staleMs` — an hours-long bound that catches a hung
+ * process or a recycled PID, never a slow but healthy run.
  */
 
 import { mkdir, readFile, writeFile, rm, stat } from 'node:fs/promises';
@@ -16,7 +18,7 @@ import { hostname } from 'node:os';
 import { dirname, join } from 'node:path';
 import { LockAcquisitionError } from '../../core/errors.js';
 
-const DEFAULT_STALE_MS = 60_000;
+const DEFAULT_STALE_MS = 6 * 60 * 60 * 1000;
 const DEFAULT_RETRIES = 30;
 const DEFAULT_RETRY_DELAY_MS = 200;
 // `tryAcquire` does `mkdir(lockPath)` then `writeFile(holder.json)`. Between
@@ -37,7 +39,10 @@ export interface LockOptions {
   retries?: number;
   /** Delay between retries in ms. */
   retryDelayMs?: number;
-  /** Lock age beyond which an existing lock is treated as stale and evicted. */
+  /**
+   * Secondary age bound (default 6h): a lock older than this is evicted even
+   * when its holder PID is still alive or cannot be probed (other host).
+   */
   staleMs?: number;
   /** Human-readable lock name surfaced in LockAcquisitionError, e.g. "lessons lock". */
   label?: string;
@@ -158,10 +163,9 @@ async function inspectLock(lockPath: string): Promise<LockMetadata | 'young' | n
 
 function isStale(meta: LockMetadata | null, staleMs: number): boolean {
   if (!meta) return true;
-  const age = Date.now() - meta.started;
-  if (age > staleMs) return true;
-  if (meta.hostname && meta.hostname !== getHostname()) return false;
-  return !isProcessAlive(meta.pid);
+  const sameHost = !meta.hostname || meta.hostname === getHostname();
+  if (sameHost && !isProcessAlive(meta.pid)) return true;
+  return Date.now() - meta.started > staleMs;
 }
 
 function isProcessAlive(pid: number): boolean {

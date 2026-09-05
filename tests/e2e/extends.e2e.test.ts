@@ -3,6 +3,9 @@ import { mkdirSync, rmSync, writeFileSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { cleanup, createTestProject } from './helpers/setup.js';
 import { runCli } from './helpers/run-cli.js';
+import { buildCacheKey } from '../../src/config/remote/remote-fetcher.js';
+
+const CACHE_KEY = buildCacheKey('github', 'org/repo', 'v1.0.0');
 import * as tar from 'tar';
 
 describe('extends and local overrides', () => {
@@ -56,12 +59,12 @@ describe('extends and local overrides', () => {
     dir = createTestProject();
     cacheDir = createTestProject();
     rmSync(cacheDir, { recursive: true, force: true });
-    mkdirSync(join(cacheDir, 'org--repo--v1.0.0', 'org-repo-v1.0.0', '.agentsmesh', 'rules'), {
+    mkdirSync(join(cacheDir, CACHE_KEY, 'org-repo-v1.0.0', '.agentsmesh', 'rules'), {
       recursive: true,
     });
     mkdirSync(join(dir, '.agentsmesh', 'rules'), { recursive: true });
     writeFileSync(
-      join(cacheDir, 'org--repo--v1.0.0', 'org-repo-v1.0.0', '.agentsmesh', 'rules', '_root.md'),
+      join(cacheDir, CACHE_KEY, 'org-repo-v1.0.0', '.agentsmesh', 'rules', '_root.md'),
       '---\nroot: true\n---\n# Cached remote\n',
     );
     writeFileSync(
@@ -88,11 +91,11 @@ describe('extends and local overrides', () => {
       cacheDir = createTestProject();
       rmSync(cacheDir, { recursive: true, force: true });
 
-      mkdirSync(join(cacheDir, 'org--repo--v1.0.0', 'org-repo-v1.0.0', '.agentsmesh', 'rules'), {
+      mkdirSync(join(cacheDir, CACHE_KEY, 'org-repo-v1.0.0', '.agentsmesh', 'rules'), {
         recursive: true,
       });
       writeFileSync(
-        join(cacheDir, 'org--repo--v1.0.0', 'org-repo-v1.0.0', '.agentsmesh', 'rules', '_root.md'),
+        join(cacheDir, CACHE_KEY, 'org-repo-v1.0.0', '.agentsmesh', 'rules', '_root.md'),
         '---\nroot: true\n---\n# Stale remote\n',
       );
 
@@ -141,19 +144,10 @@ globalThis.fetch = async (input, init) => {
       });
 
       expect(result.exitCode).toBe(0);
-      expect(readFileSync(join(dir, 'CLAUDE.md'), 'utf-8')).toContain(
-        'Refreshed remote',
-      );
+      expect(readFileSync(join(dir, 'CLAUDE.md'), 'utf-8')).toContain('Refreshed remote');
       expect(
         readFileSync(
-          join(
-            cacheDir,
-            'org--repo--v1.0.0',
-            'org-repo-v1.0.0',
-            '.agentsmesh',
-            'rules',
-            '_root.md',
-          ),
+          join(cacheDir, CACHE_KEY, 'org-repo-v1.0.0', '.agentsmesh', 'rules', '_root.md'),
           'utf-8',
         ),
       ).toContain('Refreshed remote');

@@ -33,26 +33,27 @@ export interface FetchRemoteOptions {
 }
 
 const MAX_CACHE_KEY_LENGTH = 80;
+const CACHE_KEY_HASH_LENGTH = 12;
 
+/**
+ * Keys are `<readable>--<hash>`. The readable part is lossy (`/` and `_` both
+ * become `_`, and `--` doubles as a separator), so the hash of the raw
+ * provider|identifier|ref keeps distinct sources out of one cache directory.
+ */
 export function buildCacheKey(provider: string, identifier: string, ref: string): string {
   const safe = (value: string): string =>
     value.replace(/[^a-zA-Z0-9_.-]/g, '_').replace(/^\.+/, '_');
-  let key: string;
-  if (provider === 'github') {
-    const [org, repo] = identifier.split('/', 2);
-    if (org && repo) {
-      key = `${safe(org)}--${safe(repo)}--${safe(ref)}`;
-    } else {
-      key = `${safe(provider)}__${safe(identifier)}__${safe(ref)}`;
-    }
-  } else {
-    key = `${safe(provider)}__${safe(identifier)}__${safe(ref)}`;
-  }
-  if (key.length > MAX_CACHE_KEY_LENGTH) {
-    const hash = createHash('sha256').update(key).digest('hex').slice(0, 16);
-    key = `${key.slice(0, MAX_CACHE_KEY_LENGTH - 18)}--${hash}`;
-  }
-  return key;
+  const [org, repo] = provider === 'github' ? identifier.split('/', 2) : [];
+  const readable =
+    org && repo
+      ? `${safe(org)}--${safe(repo)}--${safe(ref)}`
+      : `${safe(provider)}__${safe(identifier)}__${safe(ref)}`;
+  const hash = createHash('sha256')
+    .update(`${provider}|${identifier}|${ref}`)
+    .digest('hex')
+    .slice(0, CACHE_KEY_HASH_LENGTH);
+  const maxReadable = MAX_CACHE_KEY_LENGTH - CACHE_KEY_HASH_LENGTH - 2;
+  return `${readable.slice(0, maxReadable)}--${hash}`;
 }
 
 /**

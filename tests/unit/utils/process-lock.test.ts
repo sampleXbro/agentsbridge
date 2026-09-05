@@ -112,6 +112,45 @@ describe('acquireProcessLock', () => {
     await release();
   });
 
+  it('does NOT evict a long-running live holder on age alone (default staleMs)', async () => {
+    const lockPath = join(TEST_DIR, '.generate.lock');
+    const { hostname } = await import('node:os');
+    mkdirSync(lockPath, { recursive: true });
+    // Two minutes old, but the holder is THIS process — still alive.
+    writeFileSync(
+      join(lockPath, 'holder.json'),
+      JSON.stringify({ pid: process.pid, started: Date.now() - 120_000, hostname: hostname() }),
+    );
+
+    const err = await acquireProcessLock(lockPath, {
+      retries: 0,
+      retryDelayMs: 5,
+      label: 'install lock',
+    }).catch((e: unknown) => e);
+
+    expect(err).toBeInstanceOf(LockAcquisitionError);
+    expect((err as LockAcquisitionError).message).toContain('install lock');
+    expect(existsSync(join(lockPath, 'holder.json'))).toBe(true);
+  });
+
+  it('evicts a live same-host holder only past the (hours-long) secondary age bound', async () => {
+    const lockPath = join(TEST_DIR, '.generate.lock');
+    const { hostname } = await import('node:os');
+    mkdirSync(lockPath, { recursive: true });
+    writeFileSync(
+      join(lockPath, 'holder.json'),
+      JSON.stringify({
+        pid: process.pid,
+        started: Date.now() - 7 * 60 * 60 * 1000,
+        hostname: hostname(),
+      }),
+    );
+
+    const release = await acquireProcessLock(lockPath, { retries: 0, retryDelayMs: 5 });
+    expect(existsSync(lockPath)).toBe(true);
+    await release();
+  });
+
   it('evicts a lock whose PID is no longer running (same host)', async () => {
     const lockPath = join(TEST_DIR, '.generate.lock');
     const { hostname } = await import('node:os');

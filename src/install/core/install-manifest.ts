@@ -2,63 +2,27 @@
  * Persist install provenance so packs can be re-synced after local deletion.
  */
 
-import { join } from 'node:path';
-import { parse as parseYaml, stringify as yamlStringify } from 'yaml';
-import { z } from 'zod';
-import { extendPickSchema, featureSchema, targetSchema } from '../../config/core/schema.js';
-import { readFileSafe, writeFileAtomic } from '../../utils/filesystem/fs.js';
-import { prependYamlSchemaDirective } from '../../utils/output/schema-directive.js';
-import { manualInstallAsSchema, type ManualInstallAs } from '../manual/manual-install-mode.js';
+import { writeFileAtomic } from '../../utils/filesystem/fs.js';
+import { logger } from '../../utils/output/logger.js';
+import type { ManualInstallAs } from '../manual/manual-install-mode.js';
+import {
+  installManifestEntrySchema,
+  type InstallManifestEntry,
+} from './install-manifest-schema.js';
+import {
+  installManifestPath,
+  loadInstallManifestRows,
+  serializeInstallManifest,
+  type InstallManifestRows,
+} from './install-manifest-rows.js';
 import { normalizePersistedInstallPaths } from './portable-paths.js';
 import { sameFeatureSet } from './pick-reuse-entry-name.js';
 
-/**
- * `name` becomes `join(packsDir, name)` at uninstall time. A poisoned manifest
- * entry like `name: "../../tmp/victim"` would otherwise cause `rm -rf` outside
- * `.agentsmesh/packs/`. Mirrors `validatePackName` in `pack-writer.ts`.
- */
-const isSafeInstallName = (name: string): boolean =>
-  !name.includes('/') &&
-  !name.includes('\\') &&
-  !name.includes('\0') &&
-  name !== '.' &&
-  name !== '..';
-
-export const installManifestEntrySchema = z.object({
-  name: z.string().min(1).refine(isSafeInstallName, {
-    message: 'install name must not contain path separators, NUL, or "."/".." segments',
-  }),
-  source: z.string().min(1),
-  version: z.string().optional(),
-  source_kind: z.enum(['github', 'gitlab', 'git', 'local']),
-  features: z.array(featureSchema).min(1),
-  pick: extendPickSchema.optional(),
-  target: targetSchema.optional(),
-  path: z.string().optional(),
-  paths: z.array(z.string().min(1)).min(1).optional(),
-  as: manualInstallAsSchema.optional(),
-  refreshed_at: z.string().min(1).optional(),
-  original_ref: z.string().optional(),
-  /**
-   * Elevated artifacts (hooks/permissions/mcp) the user explicitly consented
-   * to at install time via `--accept-*`. Persisted so the sync/refresh bridges
-   * can re-apply that consent automatically when they replay the install —
-   * otherwise a deterministic re-clone would silently strip the artifacts and
-   * desync the pack contents from the recorded `features`.
-   */
-  accepted_elevated: z.array(z.enum(['hooks', 'permissions', 'mcp'])).min(1).optional(),
-});
-
-export const installManifestSchema = z.object({
-  version: z.literal(1),
-  // Post-processed by `stripRequiredFromDefaults()` in the schema generator
-  // so the emitted JSON Schema marks `installs` as not-required (a
-  // freshly-created or fully-uninstalled manifest is just `version: 1`).
-  // Runtime parser still substitutes `[]` for an absent field.
-  installs: z.array(installManifestEntrySchema).default([]),
-});
-
-export type InstallManifestEntry = z.infer<typeof installManifestEntrySchema>;
+export {
+  installManifestEntrySchema,
+  installManifestSchema,
+  type InstallManifestEntry,
+} from './install-manifest-schema.js';
 
 function sameInstallIdentity(a: InstallManifestEntry, b: InstallManifestEntry): boolean {
   return (
@@ -69,20 +33,25 @@ function sameInstallIdentity(a: InstallManifestEntry, b: InstallManifestEntry): 
   );
 }
 
-function manifestPath(canonicalDir: string): string {
-  return join(canonicalDir, 'installs.yaml');
+export async function readInstallManifest(canonicalDir: string): Promise<InstallManifestEntry[]> {
+  const rows = await loadInstallManifestRows(canonicalDir);
+  if (rows.parseError !== undefined) {
+    logger.warn(
+      `${installManifestPath(canonicalDir).replaceAll('\\', '/')} could not be parsed (${rows.parseError}); treating the manifest as empty`,
+    );
+  }
+  return rows.installs;
 }
 
-export async function readInstallManifest(canonicalDir: string): Promise<InstallManifestEntry[]> {
-  const content = await readFileSafe(manifestPath(canonicalDir));
-  if (content === null) return [];
-  try {
-    return installManifestSchema
-      .parse(parseYaml(content) as unknown)
-      .installs.map((entry) => normalizePersistedInstallPaths(entry));
-  } catch {
-    return [];
+/** Load rows for a rewrite; an unreadable file is never overwritten. */
+async function loadRowsForRewrite(canonicalDir: string): Promise<InstallManifestRows> {
+  const rows = await loadInstallManifestRows(canonicalDir);
+  if (rows.parseError !== undefined) {
+    throw new Error(
+      `${installManifestPath(canonicalDir).replaceAll('\\', '/')} could not be parsed (${rows.parseError}); refusing to rewrite it. Fix the YAML by hand and retry.`,
+    );
   }
+  return rows;
 }
 
 export async function upsertInstallManifestEntry(
@@ -90,18 +59,15 @@ export async function upsertInstallManifestEntry(
   entry: InstallManifestEntry,
 ): Promise<void> {
   const normalizedEntry = normalizePersistedInstallPaths(entry);
-  const installs = await readInstallManifest(canonicalDir);
-  const next = installs.filter(
+  const rows = await loadRowsForRewrite(canonicalDir);
+  const next = rows.installs.filter(
     (install) =>
       install.name !== normalizedEntry.name && !sameInstallIdentity(install, normalizedEntry),
   );
   next.push(normalizedEntry);
   await writeFileAtomic(
-    manifestPath(canonicalDir),
-    prependYamlSchemaDirective(
-      yamlStringify({ version: 1, installs: next.sort((a, b) => a.name.localeCompare(b.name)) }),
-      'installs',
-    ),
+    installManifestPath(canonicalDir),
+    serializeInstallManifest(next, rows.rejected),
   );
 }
 
@@ -114,15 +80,12 @@ export async function removeInstallManifestEntry(
   canonicalDir: string,
   name: string,
 ): Promise<boolean> {
-  const installs = await readInstallManifest(canonicalDir);
-  const next = installs.filter((entry) => entry.name !== name);
-  if (next.length === installs.length) return false;
+  const rows = await loadRowsForRewrite(canonicalDir);
+  const next = rows.installs.filter((entry) => entry.name !== name);
+  if (next.length === rows.installs.length) return false;
   await writeFileAtomic(
-    manifestPath(canonicalDir),
-    prependYamlSchemaDirective(
-      yamlStringify({ version: 1, installs: next.sort((a, b) => a.name.localeCompare(b.name)) }),
-      'installs',
-    ),
+    installManifestPath(canonicalDir),
+    serializeInstallManifest(next, rows.rejected),
   );
   return true;
 }

@@ -52,6 +52,7 @@ export async function runInstall(
   try {
     return await runInstallLocked({
       args,
+      flags,
       projectRoot,
       replay,
       sync,

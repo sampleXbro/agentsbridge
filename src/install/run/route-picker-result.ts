@@ -10,8 +10,11 @@
 import type { selectInstallCandidates } from '../picker/select-candidates.js';
 import { runInstallMarketplace } from './run-install-marketplace.js';
 import type { createInstallReport } from '../core/install-report.js';
+import type { InstallTarget } from '../core/install-target.js';
 import type { InstallReplayScope } from './install-replay.js';
 import type { InstallCommandResult } from './single-pack-install.js';
+
+type InstallFlags = Record<string, string | boolean>;
 
 export interface RoutePickerResultArgs {
   readonly pickerResult: ReturnType<typeof selectInstallCandidates>;
@@ -23,12 +26,35 @@ export interface RoutePickerResultArgs {
   readonly useExtends: boolean;
   readonly nameOverride: string;
   readonly replay: InstallReplayScope | undefined;
+  /** The caller's full flag bag; scope/consent flags must survive recursion. */
+  readonly flags: InstallFlags;
   readonly recurseInstall: (
-    flags: Record<string, string | boolean>,
+    flags: InstallFlags,
     args: string[],
     projectRoot: string,
     replay?: InstallReplayScope,
   ) => Promise<InstallCommandResult>;
+}
+
+/**
+ * Parent flags (`--global`, `--all`, `forceFreshMaterialize`, `--accept-*`)
+ * carry through unchanged; only the per-candidate selection is overridden.
+ */
+function recursedFlags(
+  parent: InstallFlags,
+  target: InstallTarget,
+  overrides: { force: boolean; dryRun: boolean; useExtends: boolean; name: string },
+): InstallFlags {
+  return {
+    ...parent,
+    force: overrides.force,
+    'dry-run': overrides.dryRun,
+    path: target.path ?? '',
+    as: target.as ?? '',
+    target: target.target ?? '',
+    name: overrides.name,
+    extends: overrides.useExtends,
+  };
 }
 
 export async function routePickerResult(
@@ -44,6 +70,7 @@ export async function routePickerResult(
     useExtends,
     nameOverride,
     replay,
+    flags,
     recurseInstall,
   } = args;
 
@@ -51,19 +78,14 @@ export async function routePickerResult(
     const mpResult = await runInstallMarketplace(
       pickerResult.targets,
       async (target) => {
+        // Inherit the replay scope: refresh/sync thread the recorded branch
+        // pin and elevated consent through it, and a bare `{}` still skips
+        // re-acquiring the install lock the outer call already holds.
         const sub = await recurseInstall(
-          {
-            force: true,
-            'dry-run': dryRun,
-            path: target.path ?? '',
-            as: target.as ?? '',
-            target: target.target ?? '',
-            name: target.name,
-            extends: useExtends,
-          },
+          recursedFlags(flags, target, { force: true, dryRun, useExtends, name: target.name }),
           [sourceArg],
           projectRoot,
-          {},
+          replay ?? {},
         );
         return sub.data;
       },
@@ -92,15 +114,7 @@ export async function routePickerResult(
     // install lock we already hold. Marketplace recursion uses the same
     // workaround; normal call sites never reach this branch.
     return recurseInstall(
-      {
-        force,
-        'dry-run': dryRun,
-        path: target.path ?? '',
-        as: target.as ?? '',
-        target: target.target ?? '',
-        name: nameOverride,
-        extends: useExtends,
-      },
+      recursedFlags(flags, target, { force, dryRun, useExtends, name: nameOverride }),
       [sourceArg],
       projectRoot,
       replay ?? {},

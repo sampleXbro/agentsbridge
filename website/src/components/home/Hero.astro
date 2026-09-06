@@ -6,7 +6,7 @@
  */
 import { Icon } from '@astrojs/starlight/components';
 import InstallSnippet from './InstallSnippet.astro';
-import MeshDiagram from './MeshDiagram.astro';
+import HubScene from './HubScene.astro';
 
 const { data } = Astro.locals.starlightRoute.entry;
 const { title = data.title, tagline, actions = [] } = data.hero ?? {};
@@ -35,8 +35,8 @@ const EYEBROW = ['Open source', 'MIT', 'CLI + TypeScript API'];
     <InstallSnippet />
   </div>
   <div class="am-hero-visual">
-    <MeshDiagram variant="wide" />
-    <MeshDiagram variant="compact" />
+    <HubScene variant="wide" />
+    <HubScene variant="compact" />
   </div>
 </div>
 
@@ -167,16 +167,16 @@ const EYEBROW = ['Open source', 'MIT', 'CLI + TypeScript API'];
     min-width: 0;
   }
 
-  .am-hero-visual :global(.am-mesh--wide) {
+  .am-hero-visual :global(.am-hub--wide) {
     display: none;
   }
 
   @media (min-width: 40rem) {
-    .am-hero-visual :global(.am-mesh--wide) {
+    .am-hero-visual :global(.am-hub--wide) {
       display: block;
     }
 
-    .am-hero-visual :global(.am-mesh--compact) {
+    .am-hero-visual :global(.am-hub--compact) {
       display: none;
     }
   }

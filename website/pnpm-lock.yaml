@@ -27,6 +27,9 @@ importers:
         specifier: ^0.33.5
         version: 0.33.5
     devDependencies:
+      simple-icons:
+        specifier: ^16.29.0
+        version: 16.29.0
       starlight-links-validator:
         specifier: ^0.14.3
         version: 0.14.3(@astrojs/starlight@0.32.6(astro@5.18.1(@types/node@24.13.2)(rollup@4.60.0)(typescript@5.9.3)))
@@ -1890,6 +1893,10 @@ packages:
 
   shiki@3.23.0:
     resolution: {integrity: sha512-55Dj73uq9ZXL5zyeRPzHQsK7Nbyt6Y10k5s7OjuFZGMhpp4r/rsLBH0o/0fstIzX1Lep9VxefWljK/SKCzygIA==}
+
+  simple-icons@16.29.0:
+    resolution: {integrity: sha512-4H94f5ZgcCcgJroc902TFlFdgPu2IU2eD7+WebN2Z14xKYrKHeJ4UQcZwzgSuH4Rgzw+jp7sbHl40NefuIEYsg==}
+    engines: {node: '>=0.12.18'}
 
   simple-swizzle@0.2.4:
     resolution: {integrity: sha512-nAu1WFPQSMNr2Zn9PGSZK9AGn4t/y97lEm+MXTtUDwfP0ksAIX4nO+6ruD9Jwut4C49SB1Ws+fbXsm/yScWOHw==}
@@ -4558,6 +4565,8 @@ snapshots:
       '@shikijs/types': 3.23.0
       '@shikijs/vscode-textmate': 10.0.2
       '@types/hast': 3.0.4
+
+  simple-icons@16.29.0: {}
 
   simple-swizzle@0.2.4:
     dependencies:

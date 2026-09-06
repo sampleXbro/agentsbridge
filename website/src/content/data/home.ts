@@ -167,16 +167,29 @@ export const HOME_FAQ: readonly HomeFaq[] = [
 ];
 
 /** Output paths drawn on the hero mesh. Decorative; the matrix page is the source of truth. */
-/** The return path in the hero mesh: what the tools learn flows back into `.agentsmesh/`. */
-export const HOME_MESH_LOOP: { readonly label: string } = { label: 'lessons' };
+/** A tool card in the hero hub: display name, icon key (see tool-icons.mjs), connector colour. */
+export interface HomeHubTool {
+  name: string;
+  icon: string;
+  color: string;
+}
 
-export const HOME_MESH_TARGETS: readonly string[] = [
-  'CLAUDE.md',
-  '.cursor/rules/',
-  '.github/copilot-instructions.md',
-  '.gemini/settings.json',
-  '.codex/config.toml',
-  '.windsurf/rules/',
-  'AGENTS.md',
-  'and every other tool',
+/** Left and right columns of the hero hub, top to bottom, as on the banner. */
+export const HOME_HUB_LEFT: readonly HomeHubTool[] = [
+  { name: 'Claude Code', icon: 'claude', color: '#F28B3C' },
+  { name: 'Cursor', icon: 'cursor', color: 'var(--sl-color-gray-2)' },
+  { name: 'GitHub Copilot', icon: 'copilot', color: '#4B8BF0' },
 ];
+export const HOME_HUB_RIGHT: readonly HomeHubTool[] = [
+  { name: 'Gemini CLI', icon: 'gemini', color: '#4285F4' },
+  { name: 'Codex CLI', icon: 'codex', color: '#8B6CF6' },
+  { name: 'Windsurf', icon: 'windsurf', color: '#14B8A6' },
+];
+
+/** The lessons ring around the hub, and the store it reads from. */
+export const HOME_HUB_LOOP = {
+  recall: 'recall',
+  capture: 'capture',
+  store: 'Lessons Subsystem',
+  more: 'and more',
+} as const;

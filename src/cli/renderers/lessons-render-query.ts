@@ -38,6 +38,12 @@ export function renderQuery(data: LessonsQueryData, format: LessonsQueryFormat):
   } else {
     for (const l of data.lessons) logger.info(withId(l.id, l.rule));
   }
+  // A wording match has no trigger behind it; say so (stderr) so a surprising rule
+  // can be traced to lexical retrieval rather than mistaken for a trigger hit.
+  const byWording = data.lessons.filter((l) => l.lexical === true).length;
+  if (byWording > 0) {
+    logger.warn(`(${byWording} recalled by wording rather than a trigger — see --json)`);
+  }
   // Never silently truncate: tell the user (on stderr, keeping stdout paste-clean)
   // when the ranked cap hid matches.
   if (data.totalMatches !== undefined && data.totalMatches > data.lessons.length) {

@@ -2,9 +2,10 @@ import { CURRENT_GRAPH_VERSION } from '../../lessons/graph-schema.js';
 import { loadLessonsGraphResilient } from '../../lessons/graph-store.js';
 import { normalizeRecallFile } from '../../lessons/normalize-query-file.js';
 import { lessonsSetupHint } from '../../lessons/paths.js';
-import { collectAlwaysLessons, queryLessons } from '../../lessons/query.js';
+import { matchLessons } from '../../lessons/lexical-retrieval.js';
+import { collectAlwaysLessons } from '../../lessons/query.js';
 import { rankLessons } from '../../lessons/ranking.js';
-import { recordRecallTelemetry } from '../../lessons/recall.js';
+import { recordRecallTelemetry } from '../../lessons/recall-telemetry.js';
 import { loadRecallConfig, lessonsConfigWarning } from '../../lessons/recall-config.js';
 import {
   AUTO_SESSION_TTL_MS,
@@ -124,11 +125,10 @@ export function doQuery(
     return { subcommand: 'query', exitCode: 0, format, data };
   }
   const graph = load.graph;
-  const matches = queryLessons(graph, query);
+  const { matches, lexicalCount } = matchLessons(graph, query);
   // Dedup before ranking so the caps fill with fresh lessons (see seen-cache).
-  // `--session auto` derives a correlator (env id, else a TTL'd day key so a
-  // later same-day session is not starved); every session — explicit, env, or
-  // auto — is project-namespaced so state never bleeds across repos.
+  // `--session auto` derives a correlator (env id, else a TTL'd day key); every
+  // session is project-namespaced so state never bleeds across repos.
   const sessionFlag = stringFlag(flags, 'session');
   const resolvedSession = sessionFlag === 'auto' ? autoSessionId() : (sessionFlag ?? undefined);
   const dedup = openSessionDedup({
@@ -151,17 +151,16 @@ export function doQuery(
       dedup,
       ranked.map(({ id }) => id),
     );
-  // Record recall telemetry on the CLI path too (gated; no-op unless opt-in),
-  // so shell-driven `lessons query` is visible to `lessons stats` — parity with
-  // the MCP `lessons_query` tool, which records via recallLessons. `--all` is a
-  // diagnostic dump, not a mandatory recall, so flag it as a bypass.
+  // Record recall telemetry on the CLI path too (gated), so shell-driven `lessons
+  // query` is visible to `lessons stats` — parity with the MCP tool, which records
+  // via recallLessons. `--all` is a diagnostic dump, not mandatory recall: a bypass.
   recordRecallTelemetry(projectRoot, graph, query, matches, ranked, {
     bypassed: flags.all === true,
+    lexical: lexicalCount,
     // Thread the resolved correlator so stats sees real sessions.
     session: dedup?.sessionId ?? resolvedSession,
   });
-  // `--always` prepends the universal always-on lessons (delivered on every task,
-  // excluded from triggered recall) so a non-hook agent can pull them at task start.
+  // `--always` prepends the always-on lessons so a non-hook agent gets them at task start.
   const alwaysLessons = wantAlways
     ? collectAlwaysLessons(graph).map(({ id, lesson }) => ({
         id,
@@ -174,13 +173,14 @@ export function doQuery(
     : [];
   const lessons = [
     ...alwaysLessons,
-    ...ranked.map(({ id, lesson, score }) => ({
+    ...ranked.map(({ id, lesson, score, reason }) => ({
       id,
       rule: lesson.rule,
       topics: [...lesson.topics],
       triggers: [...lesson.triggers],
       evidence: [...lesson.evidence],
       score,
+      ...(reason.lexical === true ? { lexical: true as const } : {}),
     })),
   ];
   const suppressed = matches.length - forRank.length;

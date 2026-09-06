@@ -1,0 +1,469 @@
+---
+/**
+ * The hero, after the banner: the AgentsMesh mark in a disc at the centre, a
+ * lessons ring around it with `recall` on top and `capture` below, tool cards
+ * with their logos on either side (wide) or beneath (compact), and a dashed
+ * connector in each tool's colour from the card to the hub.
+ *
+ * Motion: cards and connectors settle in, dashes drift from the hub outward
+ * (generate), the mark's nodes breathe, the ring draws itself, then a token
+ * circulates it for good — lighting `capture` at the bottom and `recall` at the
+ * top as it passes. `static` (and reduced motion) is the settled scene.
+ */
+import { arcPath, hubLayout, loopPath } from '../../lib/hub-layout.mjs';
+import { TOOL_ICONS } from '../../lib/tool-icons.mjs';
+import { HOME_HUB_LEFT, HOME_HUB_LOOP, HOME_HUB_RIGHT, type HomeHubTool } from '../../content/data/home';
+
+interface Props {
+  variant?: 'wide' | 'compact';
+  /** The settled scene with no motion (social card). */
+  static?: boolean;
+}
+
+const { variant = 'wide', static: isStatic = false } = Astro.props;
+const L = hubLayout(variant, { left: HOME_HUB_LEFT.length, right: HOME_HUB_RIGHT.length });
+const tools: readonly HomeHubTool[] = [...HOME_HUB_LEFT, ...HOME_HUB_RIGHT];
+const cards = [...L.left, ...L.right];
+const compact = variant === 'compact';
+
+/** The mark: six coloured nodes on a hexagon, dotted spokes, a chevron A. */
+const MARK_R = compact ? 32 : 38;
+const NODE_COLORS = ['#E5484D', '#F28B3C', '#7BC043', '#3B82F6', '#8B6CF6', '#14B8A6'];
+const nodes = NODE_COLORS.map((color, i) => {
+  const a = ((-90 + i * 60) * Math.PI) / 180;
+  return { color, x: +(L.hub.x + MARK_R * Math.cos(a)).toFixed(2), y: +(L.hub.y + MARK_R * Math.sin(a)).toFixed(2) };
+});
+const hexPoints = nodes.map((n) => `${n.x},${n.y}`).join(' ');
+const chevron = compact ? 11 : 14;
+
+/** The ring: two arcs with gaps for the pills, arrowheads at their ends. */
+const GAP = 24;
+const leftArc = arcPath(L.loop, L.loop.r, 90 + GAP, 270 - GAP);
+const rightArc = arcPath(L.loop, L.loop.r, -90 + GAP, 90 - GAP);
+const ring = loopPath(L.loop, L.loop.r);
+const TOKEN_S = 7;
+const pillW = compact ? 92 : 108;
+const storeW = 184;
+const ids = { title: `am-hub-title-${variant}`, arrow: `am-hub-arrow-${variant}` };
+const label =
+  'Claude Code, Cursor, GitHub Copilot, Gemini CLI, Codex CLI, Windsurf and more, each connected to one ' +
+  'AgentsMesh source, ringed by a lessons loop: capture after failures, recall before the next edit.';
+---
+
+<svg
+  class:list={['am-hub', `am-hub--${variant}`, { 'am-hub--static': isStatic }]}
+  viewBox={`0 0 ${L.view.width} ${L.view.height}`}
+  role="img"
+  aria-labelledby={ids.title}
+>
+  <title id={ids.title}>{label}</title>
+  <defs>
+    <marker id={ids.arrow} viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 1 1 L 9 5 L 1 9" fill="none" stroke="var(--am-hub-loop)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+    </marker>
+  </defs>
+
+  <g class="am-hub-connectors" fill="none">
+    {L.connectors.map((d, i) => <path d={d} style={`--i: ${i}; --c: ${tools[i]!.color}`} />)}
+  </g>
+
+  <g class="am-hub-ring" fill="none">
+    <path class="am-hub-arc" d={leftArc} pathLength="1" marker-end={`url(#${ids.arrow})`} />
+    <path class="am-hub-arc" d={rightArc} pathLength="1" marker-end={`url(#${ids.arrow})`} />
+  </g>
+
+  {
+    cards.map((c, i) => {
+      const tool = tools[i]!;
+      const icon = TOOL_ICONS[tool.icon];
+      const ix = c.x + 14;
+      const iy = c.cy - 12;
+      return (
+        <g class:list={['am-hub-card', i < L.left.length ? 'am-hub-card--left' : 'am-hub-card--right']} style={`--i: ${i}`}>
+          <rect x={c.x} y={c.y} width={c.width} height={c.height} rx="12" />
+          {icon && (
+            <g transform={`translate(${ix} ${iy})`} style={`--c: ${tool.color}`}>
+              {icon.stroke ? (
+                <path d={icon.path} fill="none" stroke="var(--sl-color-white)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" />
+              ) : (
+                <path d={icon.path} class="am-hub-logo" />
+              )}
+            </g>
+          )}
+          <text x={c.x + 48} y={c.cy} dy="0.35em">{tool.name}</text>
+        </g>
+      );
+    })
+  }
+
+  <g class="am-hub-card am-hub-card--more" style={`--i: ${cards.length}`}>
+    <rect x={L.more.x} y={L.more.y} width={L.more.width} height={L.more.height} rx="12" />
+    <text x={L.more.cx} y={L.more.cy} dy="0.35em" text-anchor="middle">
+      <tspan class="am-hub-dots">···</tspan> {HOME_HUB_LOOP.more}
+    </text>
+  </g>
+
+  <g class="am-hub-disc">
+    <circle class="am-hub-halo" cx={L.hub.x} cy={L.hub.y} r={L.hub.r + 10} />
+    <circle cx={L.hub.x} cy={L.hub.y} r={L.hub.r} />
+    <polygon class="am-hub-hex" points={hexPoints} />
+    {nodes.map((n, i) => <line class="am-hub-spoke" x1={n.x} y1={n.y} x2={L.hub.x} y2={L.hub.y} style={`--c: ${n.color}; --i: ${i}`} />)}
+    <polyline
+      class="am-hub-chevron"
+      points={`${L.hub.x - chevron},${L.hub.y + chevron * 0.95} ${L.hub.x},${L.hub.y - chevron * 0.9} ${L.hub.x + chevron},${L.hub.y + chevron * 0.95}`}
+    />
+    {nodes.map((n, i) => <circle class="am-hub-node" cx={n.x} cy={n.y} r={compact ? 4.5 : 5.5} style={`--c: ${n.color}; --i: ${i}`} />)}
+  </g>
+
+  <g class="am-hub-store" transform={`translate(${L.pills.store.x} ${L.pills.store.y})`}>
+    <rect x={-storeW / 2} y="-14" width={storeW} height="28" rx="8" />
+    <path class="am-hub-doc" d={`M ${-storeW / 2 + 12} -7 h 7 l 4 4 v 10 h -11 z`} />
+    <text x={-storeW / 2 + 31} dy="0.35em">{HOME_HUB_LOOP.store}</text>
+  </g>
+
+  <g class="am-hub-token">
+    <circle r="0">
+      <animate attributeName="r" to="4" begin="2.6s" dur="0.3s" fill="freeze" />
+      <animateMotion dur={`${TOKEN_S}s`} begin="2.6s" repeatCount="indefinite" path={ring} />
+    </circle>
+  </g>
+
+  <g class="am-hub-pill am-hub-pill--recall" transform={`translate(${L.pills.recall.x} ${L.pills.recall.y})`}>
+    <rect x={-pillW / 2} y="-16" width={pillW} height="32" rx="11" />
+    <circle cx={-pillW / 2 + 18} cy="0" r="8" class="am-hub-ok" />
+    <path d={`M ${-pillW / 2 + 14} 0 l 3 3 l 5 -6`} fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+    <text x="8" dy="0.35em" text-anchor="middle">{HOME_HUB_LOOP.recall}</text>
+  </g>
+  <g class="am-hub-pill am-hub-pill--capture" transform={`translate(${L.pills.capture.x} ${L.pills.capture.y})`}>
+    <rect x={-pillW / 2} y="-16" width={pillW} height="32" rx="11" />
+    <circle cx={-pillW / 2 + 18} cy="0" r="8" class="am-hub-bad" />
+    <path d={`M ${-pillW / 2 + 14.5} -3.5 l 7 7 M ${-pillW / 2 + 21.5} -3.5 l -7 7`} fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" />
+    <text x="8" dy="0.35em" text-anchor="middle">{HOME_HUB_LOOP.capture}</text>
+  </g>
+</svg>
+
+<style>
+  .am-hub {
+    --am-hub-loop: #12a594;
+    --am-hub-ok: #22a06b;
+    --am-hub-bad: var(--am-warn);
+    --am-hub-card: color-mix(in srgb, var(--am-surface) 92%, transparent);
+    display: block;
+    width: 100%;
+    height: auto;
+    overflow: visible;
+    font-family: var(--sl-font), system-ui, sans-serif;
+    font-size: 17px;
+  }
+
+  /* Connectors: dashed, each in its tool's colour, drifting from the hub outward. */
+  .am-hub-connectors path {
+    stroke: var(--c);
+    stroke-width: 1.6;
+    stroke-dasharray: 4 6;
+    stroke-linecap: round;
+    opacity: 0;
+    animation:
+      am-hub-fade 600ms var(--am-ease) forwards,
+      am-hub-drift 1.6s linear infinite;
+    animation-delay: calc(400ms + var(--i) * 110ms), 0s;
+  }
+
+  /* Cards: settle in from their side. */
+  .am-hub-card {
+    opacity: 0;
+    animation: am-hub-fade 600ms var(--am-ease) forwards;
+    animation-delay: calc(200ms + var(--i) * 110ms);
+  }
+
+  .am-hub-card--left {
+    animation-name: am-hub-from-left;
+  }
+
+  .am-hub-card--right {
+    animation-name: am-hub-from-right;
+  }
+
+  .am-hub-card rect {
+    fill: var(--am-hub-card);
+    stroke: var(--am-hairline);
+    stroke-width: 1;
+  }
+
+  .am-hub-card text {
+    fill: var(--sl-color-white);
+    font-weight: 500;
+  }
+
+  .am-hub-card--more text {
+    fill: var(--sl-color-gray-2);
+  }
+
+  .am-hub-dots {
+    fill: var(--sl-color-white);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+  }
+
+  .am-hub-logo {
+    fill: var(--c);
+  }
+
+  /* The hub */
+  .am-hub-disc {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: am-hub-pop 700ms var(--am-ease) both;
+    animation-delay: 100ms;
+  }
+
+  .am-hub-disc > circle:not(.am-hub-halo):not(.am-hub-node) {
+    fill: var(--sl-color-black);
+    stroke: var(--am-hairline);
+    stroke-width: 1;
+  }
+
+  .am-hub-halo {
+    fill: var(--am-hub-loop);
+    opacity: 0.1;
+    animation: am-hub-breathe 4s ease-in-out infinite;
+  }
+
+  .am-hub-hex {
+    fill: none;
+    stroke: var(--sl-color-white);
+    stroke-width: 2.2;
+    stroke-linejoin: round;
+  }
+
+  .am-hub-spoke {
+    stroke: var(--c);
+    stroke-width: 2;
+    stroke-dasharray: 1.5 4;
+    stroke-linecap: round;
+    opacity: 0.9;
+  }
+
+  .am-hub-chevron {
+    fill: none;
+    stroke: var(--sl-color-white);
+    stroke-width: 5.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .am-hub-node {
+    fill: var(--sl-color-black);
+    stroke: var(--c);
+    stroke-width: 3;
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: am-hub-node 3s ease-in-out infinite;
+    animation-delay: calc(1s + var(--i) * 0.35s);
+  }
+
+  /* The ring draws itself, then the token circulates it. */
+  .am-hub-arc {
+    stroke: var(--am-hub-loop);
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    animation: am-hub-draw 1000ms var(--am-ease) forwards;
+    animation-delay: 1.3s;
+  }
+
+  .am-hub-token circle {
+    fill: var(--am-hub-loop);
+    filter: drop-shadow(0 0 4px var(--am-hub-loop));
+  }
+
+  .am-hub-store {
+    opacity: 0;
+    animation: am-hub-fade 500ms var(--am-ease) forwards;
+    animation-delay: 1s;
+  }
+
+  .am-hub-store rect {
+    fill: var(--am-hub-card);
+    stroke: var(--am-hairline);
+  }
+
+  .am-hub-store text {
+    fill: var(--sl-color-white);
+    font-size: 14.5px;
+    font-weight: 500;
+  }
+
+  .am-hub-doc {
+    fill: none;
+    stroke: var(--sl-color-gray-2);
+    stroke-width: 1.4;
+    stroke-linejoin: round;
+  }
+
+  /* Pills light up as the token passes: capture at the bottom, recall at the top. */
+  .am-hub-pill {
+    opacity: 0;
+    animation: am-hub-fade 500ms var(--am-ease) forwards;
+    animation-delay: 1.9s;
+  }
+
+  .am-hub-pill rect {
+    fill: var(--am-hub-card);
+    stroke: var(--am-hairline);
+    animation: am-hub-ping 7s ease-out infinite;
+  }
+
+  .am-hub-pill--capture rect {
+    --am-hub-ping: var(--am-hub-bad);
+    animation-delay: 2.6s;
+  }
+
+  .am-hub-pill--recall rect {
+    --am-hub-ping: var(--am-hub-ok);
+    animation-delay: 6.1s;
+  }
+
+  .am-hub-pill text {
+    fill: var(--sl-color-white);
+    font-weight: 500;
+  }
+
+  .am-hub-ok {
+    fill: var(--am-hub-ok);
+  }
+
+  .am-hub-bad {
+    fill: var(--am-hub-bad);
+  }
+
+  @keyframes am-hub-fade {
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes am-hub-from-left {
+    from {
+      opacity: 0;
+      transform: translateX(-14px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  @keyframes am-hub-from-right {
+    from {
+      opacity: 0;
+      transform: translateX(14px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  @keyframes am-hub-drift {
+    to {
+      stroke-dashoffset: -10;
+    }
+  }
+
+  @keyframes am-hub-pop {
+    from {
+      opacity: 0;
+      transform: scale(0.85);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  @keyframes am-hub-breathe {
+    50% {
+      opacity: 0.22;
+    }
+  }
+
+  @keyframes am-hub-node {
+    50% {
+      transform: scale(1.25);
+    }
+  }
+
+  @keyframes am-hub-draw {
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+
+  @keyframes am-hub-ping {
+    0%,
+    12%,
+    100% {
+      stroke: var(--am-hairline);
+    }
+    4% {
+      stroke: var(--am-hub-ping);
+    }
+  }
+
+  /* The settled scene: the social card, and anyone who asked for less motion.
+     Pills and the store are placed by an SVG transform attribute, which a CSS
+     `transform: none` would override, so only the CSS-animated groups get it. */
+  .am-hub--static .am-hub-connectors path,
+  .am-hub--static .am-hub-card,
+  .am-hub--static .am-hub-disc,
+  .am-hub--static .am-hub-store,
+  .am-hub--static .am-hub-pill,
+  .am-hub--static .am-hub-pill rect,
+  .am-hub--static .am-hub-node,
+  .am-hub--static .am-hub-halo,
+  .am-hub--static .am-hub-arc {
+    animation: none;
+    opacity: 1;
+    stroke-dashoffset: 0;
+  }
+  .am-hub--static .am-hub-card,
+  .am-hub--static .am-hub-disc,
+  .am-hub--static .am-hub-node {
+    transform: none;
+  }
+  .am-hub--static .am-hub-halo {
+    opacity: 0.14;
+  }
+  .am-hub--static .am-hub-token {
+    display: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .am-hub .am-hub-connectors path,
+    .am-hub .am-hub-card,
+    .am-hub .am-hub-disc,
+    .am-hub .am-hub-store,
+    .am-hub .am-hub-pill,
+    .am-hub .am-hub-pill rect,
+    .am-hub .am-hub-node,
+    .am-hub .am-hub-halo,
+    .am-hub .am-hub-arc {
+      animation: none;
+      opacity: 1;
+      stroke-dashoffset: 0;
+    }
+    .am-hub .am-hub-card,
+    .am-hub .am-hub-disc,
+    .am-hub .am-hub-node {
+      transform: none;
+    }
+    .am-hub .am-hub-halo {
+      opacity: 0.14;
+    }
+    .am-hub .am-hub-token {
+      display: none;
+    }
+  }
+</style>

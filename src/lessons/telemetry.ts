@@ -64,6 +64,8 @@ export interface RecallTelemetryRecord {
     readonly file: number;
     readonly command: number;
     readonly keyword: number;
+    /** Candidates reached by rule wording (lexical retrieval). Absent on older rows. */
+    readonly text?: number;
   };
   /**
    * Session correlator from {@link SESSION_ENV}, when set. Lets `stats` group

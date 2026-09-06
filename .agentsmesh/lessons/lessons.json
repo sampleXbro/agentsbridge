@@ -4896,6 +4896,21 @@
         "t-glob-74262634"
       ]
     },
+    "lessons-system-when-a-lexical-or-bm25": {
+      "createdAt": "2026-09-06",
+      "evidence": [
+        "803593d3"
+      ],
+      "rule": "When a lexical or BM25 candidate gate counts shared terms, exclude generic English words (top, left, before, first, new, use, ...) from the count even though they are not stopwords for scoring: a two-term overlap gate on raw tokens qualified a merge-conflict-marker rule for an SVG prompt on 'top' and 'left'. Let IDF weigh such words in the score, but never let them be the reason a rule qualifies. Also, in BM25 fixtures vary the number of DISTINCT shared terms, not repeats of one phrase: repeats raise term frequency and document length together and saturate, so the ordering is not monotonic.",
+      "status": "active",
+      "topics": [
+        "lessons-system"
+      ],
+      "triggers": [
+        "t-glob-b571700c",
+        "t-glob-a3504901"
+      ]
+    },
     "lessons-system-when-a-recall-query-primitive": {
       "createdAt": "2026-06-07",
       "evidence": [
@@ -10638,6 +10653,10 @@
     "t-glob-b4b3fc5c": {
       "kind": "file_glob",
       "pattern": "src/core/lint/shared/**/*.ts"
+    },
+    "t-glob-b571700c": {
+      "kind": "file_glob",
+      "pattern": "src/lessons/lexical-retrieval.ts"
     },
     "t-glob-b80b011c": {
       "kind": "file_glob",

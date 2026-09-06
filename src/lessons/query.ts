@@ -26,6 +26,8 @@ export interface LessonsQuery {
 export interface MatchedLesson {
   readonly id: string;
   readonly lesson: Lesson;
+  /** Set when the lesson was reached by its wording, not a trigger (lexical retrieval). */
+  readonly lexical?: true;
 }
 
 /**

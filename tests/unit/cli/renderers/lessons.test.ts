@@ -91,6 +91,26 @@ describe('renderLessons — query', () => {
     expect(output.stdout()).toMatch(/no matches/i);
   });
 
+  it('notes on stderr how many rules were recalled by wording, keeping stdout paste-clean', () => {
+    renderLessons({
+      subcommand: 'query',
+      exitCode: 0,
+      format: 'plain',
+      data: {
+        lessons: [
+          { id: 'a', rule: 'Triggered rule.', topics: [], triggers: [], evidence: [] },
+          { id: 'b', rule: 'Wording rule.', topics: [], triggers: [], evidence: [], lexical: true },
+        ],
+        query: { keyword: 'svg clock' },
+        autoMigrated: false,
+        totalMatches: 2,
+      },
+    });
+    expect(output.stdout()).toContain('Wording rule.');
+    expect(output.stdout()).not.toMatch(/wording rather/);
+    expect(output.stderr()).toMatch(/1 recalled by wording rather than a trigger/);
+  });
+
   it('names a fully-deduped recall instead of a bare "(no matches)" (plain + md)', () => {
     for (const format of ['plain', 'md'] as const) {
       renderLessons({

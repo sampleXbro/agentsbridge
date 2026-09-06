@@ -8,6 +8,8 @@ export interface RankReason {
   readonly bm25: number;
   readonly specificity: number;
   readonly topicCoherence: number;
+  /** Reached by rule wording rather than a trigger (see lexical-retrieval.ts). */
+  readonly lexical?: true;
 }
 
 export interface RankedLesson {
@@ -123,7 +125,7 @@ export function rankLessons(
   const coherence = buildTopicCoherence(matches);
   const matchedTriggerIds = collectMatchedTriggerIds(graph, query);
 
-  const scored = matches.map(({ id, lesson }) => {
+  const scored = matches.map(({ id, lesson, lexical }) => {
     const hitTriggers = lesson.triggers.filter((t) => matchedTriggerIds.has(t));
     let specificity = 0;
     // Each hit trigger belongs to this active, matched lesson, so fanout has it.
@@ -143,6 +145,7 @@ export function rankLessons(
       // Absent from the log ⇒ neutral 1, so a lesson with no outcome data never
       // sinks below one that has merely been recorded.
       effectiveness: options.effectiveness?.get(id) ?? 1,
+      lexical,
     };
   });
 
@@ -165,6 +168,7 @@ export function rankLessons(
         bm25: s.bm25,
         specificity: s.specificity,
         topicCoherence: s.topicCoherence,
+        ...(s.lexical === true ? { lexical: true as const } : {}),
       },
     }))
     .sort((a, b) => {

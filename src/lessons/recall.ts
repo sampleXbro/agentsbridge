@@ -1,19 +1,14 @@
 import { maybeAutoMigrateLessons } from './auto-migrate.js';
 import { currentGraphStamp, refreshCommandFastpath } from './cmd-fastpath.js';
-import type { LessonsGraph } from './graph-schema.js';
 import { loadLessonsGraphResilient } from './graph-store.js';
 import { normalizeRecallFile } from './normalize-query-file.js';
-import {
-  collectMatchedTriggersByKind,
-  queryLessons,
-  type LessonsQuery,
-  type MatchedLesson,
-} from './query.js';
-import { estTokens, rankLessons, type RankedLesson } from './ranking.js';
+import { matchLessons } from './lexical-retrieval.js';
+import type { LessonsQuery } from './query.js';
+import { rankLessons, type RankedLesson } from './ranking.js';
 import { loadRecallConfig } from './recall-config.js';
+import { recordRecallTelemetry } from './recall-telemetry.js';
 import { loadEffectiveness } from './outcome-log.js';
 import { commitSeen, filterUnseen, openSessionDedup } from './seen-cache.js';
-import { appendRecallRecord, isTelemetryEnabled, sessionId } from './telemetry.js';
 
 /**
  * Migration-aware application APIs for the lessons subsystem.
@@ -122,7 +117,9 @@ export async function recallLessons(
     query.file === undefined
       ? query
       : { ...query, file: normalizeRecallFile(query.file, projectRoot) };
-  const matches = queryLessons(graph, matchQuery);
+  // Task text (prompt submit, task-start keyword recall) also reaches lessons by
+  // their wording; a file/command query never does — see lexical-retrieval.ts.
+  const { matches, lexicalCount } = matchLessons(graph, matchQuery);
   // Dedup BEFORE ranking so the caps fill with fresh lessons (see seen-cache).
   const dedup = openSessionDedup({
     explicit: options.sessionId,
@@ -153,48 +150,7 @@ export async function recallLessons(
   recordRecallTelemetry(projectRoot, graph, matchQuery, matches, lessons, {
     bypassed: false,
     session: options.sessionId,
+    lexical: lexicalCount,
   });
   return { lessons, totalMatches: matches.length, suppressed: matches.length - forRank.length };
-}
-
-/**
- * Append one telemetry record for this recall — gated, so the hot path computes
- * nothing (no provenance pass, no timestamp, no I/O) in the default-off config.
- *
- * Exported so the CLI `lessons query` handler records identically to this
- * (MCP) path; both query entry points MUST share this single recorder, or
- * shell-driven recall would be invisible to `lessons stats`.
- */
-export function recordRecallTelemetry(
-  projectRoot: string,
-  graph: LessonsGraph,
-  query: LessonsQuery,
-  matches: readonly MatchedLesson[],
-  lessons: readonly RankedLesson[],
-  options: { readonly bypassed?: boolean; readonly session?: string } = {},
-): void {
-  if (!isTelemetryEnabled(process.env, projectRoot)) return;
-  const byKind = collectMatchedTriggersByKind(graph, query);
-  const countVia = (set: Set<string>): number =>
-    matches.filter(({ lesson }) => lesson.triggers.some((t) => set.has(t))).length;
-  // Explicit caller session (hook stdin / --session) wins; env is the fallback.
-  const session = options.session ?? sessionId();
-  appendRecallRecord(projectRoot, {
-    ts: new Date().toISOString(),
-    hasFile: query.file !== undefined,
-    hasCommand: query.command !== undefined,
-    hasKeyword: query.keyword !== undefined,
-    totalMatches: matches.length,
-    returnedCount: lessons.length,
-    returnedTokens: lessons.reduce((sum, l) => sum + estTokens(l.lesson.rule), 0),
-    truncated: matches.length > lessons.length,
-    matchedByKind: {
-      file: countVia(byKind.file_glob),
-      command: countVia(byKind.command_pattern),
-      keyword: countVia(byKind.keyword),
-    },
-    lessonIds: lessons.map((l) => l.id),
-    bypassed: options.bypassed === true,
-    ...(session !== undefined ? { session } : {}),
-  });
 }

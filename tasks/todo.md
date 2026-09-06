@@ -1,35 +1,26 @@
-# Lessons efficiency: three fixes (2026-09-06)
+# Lexical retrieval on prompt submit (2026-09-06)
 
-Evidence (recall-log, 5,521 recalls since 2026-07-17): 63% of recalls arrive
-<3s after a same-shaped one (Pre+Post double fire); outcome-log dead since
-2026-07-22 because the telemetry gate is an env var hooks spawned by the
-desktop app never see; 322 of 542 lessons never delivered.
+Goal: conceptual lessons reachable by their wording, not only by a keyword
+trigger, on the paths that carry task text: the UserPromptSubmit hook and the
+task-start `lessons query --keyword` / MCP keyword recall. Never on the
+per-tool-call path (file/command queries), where precision was just repaired.
 
-## 1. Stop the PostToolUse double fire
-- [x] scaffold: drop PostToolUse from RECALL_EVENTS; remove a previously
-      scaffolded managed PostToolUse recall entry (migration); tests first
-- [x] this repo: .agentsmesh/hooks.yaml loses the PostToolUse recall entry;
-      `agentsmesh generate`
-- [x] docs: cli/lessons.mdx hook block + bullet
+- [x] extract recordRecallTelemetry to recall-telemetry.ts (recall.ts is at 200)
+- [x] lexical-retrieval.ts: isKeywordOnlyQuery, lexicalCandidates(graph, keyword, exclude)
+      BM25 over active, non-always rule text; >= 2 distinct query terms present;
+      cap 3; excluded ids skipped; provenance flag on MatchedLesson
+- [x] recall.ts: keyword-only => candidates = trigger matches + lexical
+- [x] ranking: lexical flag rides into RankReason (specificity stays 0 => below triggers)
+- [x] telemetry: matchedByKind.text = lexical candidate count
+- [x] tests first: unit (module), recall-level (keyword-only vs file+keyword,
+      ordering, telemetry), hook UserPromptSubmit injection
+- [x] docs: reference/lessons.mdx recall semantics, cli/lessons.mdx; changeset
+- [ ] gate: full suite + floor, lint, knip, docs build; measure on real graph; commit; push
 
-## 2. Revive the effectiveness loop
-- [x] telemetry gate reads `.agentsmesh/lessons/config.json` `telemetry: true`
-      as well as the env var (env `0` forces off); tests first
-- [x] every writer passes projectRoot; defaultLessonsConfig gains `telemetry`
-- [x] this repo: config.json `telemetry: true`
-- [x] docs: reference + guides telemetry sections, config.json shape
-
-## 3. Surface never-recalled lessons
-- [x] validate-health: NEVER_RECALLED summary finding (active, predates the
-      recall window, not always-on, log >= 500 recalls); tests first
-- [x] docs: reference/lessons.mdx health findings
-
-## Gate
-- [x] full suite + floor, typecheck, lint, knip, website build; commit; push
-
-## Verified on this repo
-- `.claude/settings.json`: PreToolUse 1 recall entry, PostToolUse 0; `generate --check` in sync
-- hook probe with NO telemetry env var: outcome rows 1258 -> 1261 (config gate writes);
-  with env=0: silent (override wins)
-- `validate`: NEVER_RECALLED lists 207 active lessons (predating the window; excludes
-  always-on and post-window captures) across 5,522 recalls since 2026-07-17
+## Verified on the real graph (493 active lessons)
+- keyword-only recall latency unchanged at 0.20s including BM25 over every rule
+- prompt "the hero animation dots were parked in the top left corner before the
+  svg clock started": before the generic-word gate, a merge-conflict-marker rule
+  qualified on "top" + "left"; after it, only the SVG animation lesson returns
+- CLI handler wired through the same matchLessons step as recallLessons, so the
+  hook, CLI and MCP paths cannot drift; `lexical: true` in --json, stderr notice

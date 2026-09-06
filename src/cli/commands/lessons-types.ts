@@ -15,6 +15,8 @@ export interface LessonsQueryData {
     readonly triggers: string[];
     readonly evidence: string[];
     readonly score?: number;
+    /** Reached by rule wording, not a trigger (keyword-only queries only). */
+    readonly lexical?: true;
   }>;
   readonly query: { file?: string; command?: string; keyword?: string };
   readonly autoMigrated: boolean;

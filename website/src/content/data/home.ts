@@ -167,22 +167,48 @@ export const HOME_FAQ: readonly HomeFaq[] = [
 ];
 
 /** Output paths drawn on the hero mesh. Decorative; the matrix page is the source of truth. */
-/** What flows INTO `.agentsmesh/` in the hero mesh, top to bottom. */
-export const HOME_MESH_INPUTS: readonly string[] = ['existing tool configs', 'community packs'];
+/** One beat of the hero story: the step name, the real command, and its window in seconds. */
+export interface HomeDemoScene {
+  step: string;
+  command: string;
+  from: number;
+  to: number;
+}
 
-/** The stage words on the hero mesh, in the order the flow reads. */
-export const HOME_MESH_STAGES = { in: 'import', out: 'generate', sync: 'in sync ✓' } as const;
-
-/** The return path in the hero mesh: what the tools learn flows back into `.agentsmesh/`. */
-export const HOME_MESH_LOOP: { readonly label: string } = { label: 'lessons' };
-
-export const HOME_MESH_TARGETS: readonly string[] = [
-  'CLAUDE.md',
-  '.cursor/rules/',
-  '.github/copilot-instructions.md',
-  '.gemini/settings.json',
-  '.codex/config.toml',
-  '.windsurf/rules/',
-  'AGENTS.md',
-  'and every other tool',
+/** The hero story, in order. Windows are seconds on a 16s loop (see flow-timeline.mjs). */
+export const HOME_DEMO_SCENES: readonly HomeDemoScene[] = [
+  { step: 'Write once', command: 'agentsmesh init', from: 0.3, to: 3.6 },
+  { step: 'Generate', command: 'agentsmesh generate', from: 3.6, to: 8.2 },
+  { step: 'Stay in sync', command: 'agentsmesh check', from: 8.9, to: 11.6 },
+  { step: 'Learn', command: 'agentsmesh lessons add', from: 12.2, to: 15.7 },
 ];
+
+/** What the canonical folder shows filling up in the first beat. */
+export const HOME_DEMO_SOURCE_FILES: readonly string[] = [
+  'rules/',
+  'commands/',
+  'agents/',
+  'skills/',
+  'mcp.json',
+  'hooks.yaml',
+];
+
+/** The tool cards the second beat fans out to: tool name and the file it gets. */
+export const HOME_DEMO_TOOLS: readonly { tool: string; file: string }[] = [
+  { tool: 'Claude Code', file: 'CLAUDE.md' },
+  { tool: 'Cursor', file: '.cursor/rules/' },
+  { tool: 'Copilot', file: '.github/copilot-instructions.md' },
+  { tool: 'Gemini CLI', file: 'GEMINI.md' },
+  { tool: 'Codex', file: '.codex/config.toml' },
+  { tool: 'Windsurf', file: '.windsurf/rules/' },
+];
+
+/** The card that stands in for the rest of the matrix. */
+export const HOME_DEMO_MORE = 'and every other tool';
+
+/** The fourth beat, taken from a real captured lesson. */
+export const HOME_DEMO_LESSON = {
+  failure: "split('/') broke on a Windows path",
+  rule: "Never split('/') a filesystem path; use basename().",
+  trigger: 'src/**/path*.ts',
+} as const;

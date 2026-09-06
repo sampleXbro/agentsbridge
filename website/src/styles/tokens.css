@@ -17,6 +17,7 @@
   --am-surface: var(--sl-color-gray-6);
   --am-signal: var(--sl-color-accent);
   --am-signal-ink: hsl(222 16% 7%);
+  --am-warn: hsl(8 76% 62%);
   --am-max-width: 72rem;
 
   /* Graphite ramp (dark) */
@@ -48,6 +49,7 @@
 :root[data-theme='light'] {
   /* Filled amber controls: the ochre is dark here, so their text goes light. */
   --am-signal-ink: hsl(40 30% 99%);
+  --am-warn: hsl(8 70% 42%);
 
   /* Warm paper ramp (light) */
   --sl-color-white: hsl(222 20% 9%);

@@ -8781,6 +8781,21 @@
         "t-glob-ddc2ae20"
       ]
     },
+    "website-svg-to-capture-a-specific-beat": {
+      "createdAt": "2026-09-06",
+      "evidence": [
+        "fe269783"
+      ],
+      "rule": "To capture a specific beat of a looping CSS animation for review, drive the clock: pause every animation and set currentTime to the phase, then screenshot. Polling performance.now() or an animation's currentTime and screenshotting 'now' is unreliable: background tabs throttle rendering so the frame is stale, and screenshot latency shifts the phase by a second or more.",
+      "status": "active",
+      "topics": [
+        "website-svg"
+      ],
+      "triggers": [
+        "t-glob-2d4b85c9",
+        "t-cmd-dc2dcc00"
+      ]
+    },
     "windows-paths-a-directory-rename-that-finalizes": {
       "createdAt": "2026-06-12",
       "evidence": [
@@ -9779,6 +9794,10 @@
       "kind": "command_pattern",
       "pattern": "refresh --global"
     },
+    "t-cmd-dc2dcc00": {
+      "kind": "command_pattern",
+      "pattern": "astro (build|preview|dev)"
+    },
     "t-cmd-df9bd679": {
       "kind": "command_pattern",
       "pattern": "git commit --amend"
@@ -10058,6 +10077,10 @@
     "t-glob-2be00990": {
       "kind": "file_glob",
       "pattern": "src/cli/commands/init-wizard.ts"
+    },
+    "t-glob-2d4b85c9": {
+      "kind": "file_glob",
+      "pattern": "website/src/components/home/*.astro"
     },
     "t-glob-2e029bcd": {
       "kind": "file_glob",

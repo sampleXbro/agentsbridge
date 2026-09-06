@@ -106,7 +106,7 @@ export function doStats(flags: LessonsFlags, projectRoot: string): LessonsComman
       hasLog: recallLogExists(projectRoot),
       hasCaptureLog: captureLogExists(projectRoot),
       hasOutcomeLog: outcomeLogExists(projectRoot),
-      telemetryEnabled: isTelemetryEnabled(),
+      telemetryEnabled: isTelemetryEnabled(process.env, projectRoot),
     },
   };
 }

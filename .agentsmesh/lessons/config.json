@@ -1,5 +1,6 @@
 {
   "recallLimit": 5,
   "recallMaxTokens": 300,
-  "autoPrune": true
+  "autoPrune": true,
+  "telemetry": true
 }

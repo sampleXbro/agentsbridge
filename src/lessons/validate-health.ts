@@ -1,6 +1,7 @@
 import type { LessonsGraph } from './graph-schema.js';
 import { effectiveness, readOutcomeLog, type OutcomeEvent } from './outcome-log.js';
 import { queryLessons, type LessonsQuery } from './query.js';
+import { readRecallLog, type RecallTelemetryRecord } from './telemetry.js';
 import type { ValidationFinding } from './validate.js';
 
 /**
@@ -20,17 +21,66 @@ import type { ValidationFinding } from './validate.js';
 export const INEFFECTIVE_MIN_DELIVERIES = 3;
 /** A contextKey failing at least this often with no covering lesson is uncovered. */
 const UNCOVERED_MIN_FAILURES = 2;
+/** Only a recall log at least this long can say a lesson "never" fires. */
+export const UNUSED_MIN_RECALLS = 500;
+/** Ids named in the NEVER_RECALLED message; the finding's `lessonIds` carries them all. */
+const UNUSED_NAMED_IDS = 8;
 
 export function collectHealthFindings(
   projectRoot: string,
   graph: LessonsGraph,
 ): ValidationFinding[] {
-  const events = readOutcomeLog(projectRoot);
-  if (events.length === 0) return [];
   const findings: ValidationFinding[] = [];
-  collectIneffective(events, graph, findings);
-  collectUncovered(events, graph, findings);
+  const events = readOutcomeLog(projectRoot);
+  if (events.length > 0) {
+    collectIneffective(events, graph, findings);
+    collectUncovered(events, graph, findings);
+  }
+  collectNeverRecalled(readRecallLog(projectRoot), graph, findings);
   return findings;
+}
+
+/**
+ * Lessons that never fired across the whole recall window — trigger cost with no
+ * return so far. Field data: 59% of a mature graph. One aggregate finding, not one
+ * per lesson, so a long tail cannot flood `validate` into being ignored; the ids
+ * ride on `lessonIds` for tooling. A lesson counts only when it is active, not
+ * always-on (those ride prompts, outside the recall log), and older than the log
+ * window, so a fresh capture is never accused of silence it had no time to break.
+ */
+function collectNeverRecalled(
+  records: readonly RecallTelemetryRecord[],
+  graph: LessonsGraph,
+  findings: ValidationFinding[],
+): void {
+  if (records.length < UNUSED_MIN_RECALLS) return;
+  const stamps = records.map((r) => Date.parse(r.ts)).filter((t) => Number.isFinite(t));
+  if (stamps.length === 0) return;
+  const windowStart = Math.min(...stamps);
+  const delivered = new Set(records.flatMap((r) => r.lessonIds ?? []));
+  const ids = Object.entries(graph.lessons)
+    .filter(
+      ([id, l]) =>
+        l.status === 'active' &&
+        l.scope !== 'always' &&
+        Date.parse(l.createdAt) < windowStart &&
+        !delivered.has(id),
+    )
+    .map(([id]) => id)
+    .sort();
+  if (ids.length === 0) return;
+  const named = ids.slice(0, UNUSED_NAMED_IDS).join(', ');
+  const more = ids.length > UNUSED_NAMED_IDS ? ` (+${ids.length - UNUSED_NAMED_IDS} more)` : '';
+  findings.push({
+    level: 'warning',
+    code: 'NEVER_RECALLED',
+    lessonIds: ids,
+    message:
+      `${ids.length} active lesson(s) never delivered across the last ${records.length} recalls ` +
+      `(since ${new Date(windowStart).toISOString().slice(0, 10)}): ${named}${more}. Their triggers ` +
+      `may point at paths or commands no longer touched — inspect with \`agentsmesh lessons show <id>\`, ` +
+      `narrow or retarget the trigger, or retire with: agentsmesh lessons deprecate <id>`,
+  });
 }
 
 function collectIneffective(

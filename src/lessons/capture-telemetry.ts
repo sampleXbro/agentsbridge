@@ -65,7 +65,7 @@ export function appendCaptureRecord(
   record: CaptureTelemetryRecord,
   env: NodeJS.ProcessEnv = process.env,
 ): void {
-  if (!isTelemetryEnabled(env)) return;
+  if (!isTelemetryEnabled(env, projectRoot)) return;
   appendJsonl(captureLogPath(projectRoot), record, {
     maxRecords: MAX_CAPTURE_LOG_RECORDS,
     trimTriggerBytes: CAPTURE_LOG_TRIM_TRIGGER_BYTES,
@@ -94,7 +94,7 @@ export function recordCapture(
   result: AddLessonResult | null,
   env: NodeJS.ProcessEnv = process.env,
 ): void {
-  if (!isTelemetryEnabled(env)) return;
+  if (!isTelemetryEnabled(env, projectRoot)) return;
   const session = sessionId(env);
   appendCaptureRecord(
     projectRoot,

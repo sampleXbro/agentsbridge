@@ -9,9 +9,6 @@ PostToolUse:
   - matcher: Edit|Write
     type: command
     command: jq -r '.tool_input.file_path' | xargs eslint --fix
-  - matcher: Edit|Write|Bash
-    type: command
-    command: agentsmesh lessons hook
 UserPromptSubmit:
   - matcher: "*"
     type: command

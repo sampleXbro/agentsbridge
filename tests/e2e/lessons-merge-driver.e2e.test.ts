@@ -21,7 +21,18 @@ function git(...args: string[]): { status: number; stdout: string; stderr: strin
 
 async function addLesson(rule: string, topic: string, file: string): Promise<void> {
   await runCliArgs(
-    ['lessons', 'add', rule, '--topic', topic, '--new-topic', '--topic-summary', `${topic}.`, '--trigger-file', file],
+    [
+      'lessons',
+      'add',
+      rule,
+      '--topic',
+      topic,
+      '--new-topic',
+      '--topic-summary',
+      `${topic}.`,
+      '--trigger-file',
+      file,
+    ],
     dir,
   );
 }
@@ -38,11 +49,17 @@ beforeEach(async () => {
     '.agentsmesh/lessons/lessons.json merge=agentsmesh-lessons\n',
   );
   git('config', 'merge.agentsmesh-lessons.name', 'agentsmesh lessons union');
-  git('config', 'merge.agentsmesh-lessons.driver', `node ${CLI_PATH} lessons merge-driver %O %A %B`);
+  git(
+    'config',
+    'merge.agentsmesh-lessons.driver',
+    `node ${CLI_PATH} lessons merge-driver %O %A %B`,
+  );
   git('add', '-A');
   git('commit', '-qm', 'base');
   mainBranch = git('rev-parse', '--abbrev-ref', 'HEAD').stdout.trim();
-});
+  // One CLI spawn (`init --lessons`) plus six git processes: the slowest setup in
+  // the repo. It exceeded the 10s hook budget on a loaded Windows runner.
+}, 60_000);
 
 afterEach(() => rmSync(dir, { recursive: true, force: true }));
 

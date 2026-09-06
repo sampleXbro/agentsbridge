@@ -24,7 +24,9 @@ export default defineConfig({
       AGENTSMESH_CACHE: REMOTE_CACHE,
     },
     testTimeout: 60_000,
-    hookTimeout: 10_000,
+    // Parity with vitest.e2e.config.ts: this config also runs tests/e2e, whose
+    // setup hooks spawn the built CLI plus git. 10s tripped on a Windows runner.
+    hookTimeout: 30_000,
     include: [
       'tests/unit/**/*.test.ts',
       'tests/integration/**/*.test.ts',

@@ -4,29 +4,57 @@
  */
 
 /** @typedef {{ x: number, y: number }} Point */
-/** @typedef {{ width: number, height: number, padX?: number, padY?: number }} MeshBox */
-/** @typedef {{ source: Point, targets: Point[], edges: string[] }} MeshLayout */
+/**
+ * `inletHeight` reserves a band above the fan for the inputs that flow INTO the
+ * source (imported configs, installed packs); the fan is pushed down by it.
+ * @typedef {{ width: number, height: number, padX?: number, padY?: number, inletHeight?: number }} MeshBox
+ */
+/** @typedef {{ source: Point, targets: Point[], edges: string[], inputs: Point[] }} MeshLayout */
 
 const DEFAULT_PAD_X = 40;
 const DEFAULT_PAD_Y = 30;
+/** Vertical margin inside the inlet band, above the first and below the last input. */
+const INLET_PAD = 12;
 
 /**
  * @param {number} count
  * @param {MeshBox} box
+ * @param {{ inputs?: number }} [extras]
  * @returns {MeshLayout}
  */
-export function meshLayout(count, box) {
+export function meshLayout(count, box, extras = {}) {
   const padX = box.padX ?? DEFAULT_PAD_X;
   const padY = box.padY ?? DEFAULT_PAD_Y;
-  const source = { x: padX, y: box.height / 2 };
+  const inputCount = extras.inputs ?? 0;
+  const inlet = inputCount > 0 ? (box.inletHeight ?? 0) : 0;
+  const source = { x: padX, y: inlet + box.height / 2 };
   const targetX = box.width - padX;
-  const targets = spread(count, padY, box.height - padY).map((y) => ({ x: targetX, y }));
+  const targets = spread(count, inlet + padY, inlet + box.height - padY).map((y) => ({
+    x: targetX,
+    y,
+  }));
   const bend = (targetX - source.x) / 2;
   const edges = targets.map(
     (t) =>
       `M ${source.x} ${source.y} C ${source.x + bend} ${source.y}, ${t.x - bend} ${t.y}, ${t.x} ${t.y}`,
   );
-  return { source, targets, edges };
+  const inputs = spread(inputCount, INLET_PAD, inlet - INLET_PAD).map((y) => ({ x: source.x, y }));
+  return { source, targets, edges, inputs };
+}
+
+/**
+ * The inlet: one straight rail from the first input, through every input, down
+ * to the top of the source — the mirror of the lessons rail on the far side.
+ * Pulses on it travel into `.agentsmesh/`: imports and installs.
+ * @param {MeshLayout} layout
+ * @param {number} [sourceInset] distance above the source centre to land on
+ * @returns {string | null}
+ */
+export function meshInlet(layout, sourceInset = 0) {
+  const first = layout.inputs[0];
+  if (first === undefined) return null;
+  const { source } = layout;
+  return `M ${first.x} ${first.y} L ${source.x} ${source.y - sourceInset}`;
 }
 
 /**

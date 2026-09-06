@@ -167,6 +167,12 @@ export const HOME_FAQ: readonly HomeFaq[] = [
 ];
 
 /** Output paths drawn on the hero mesh. Decorative; the matrix page is the source of truth. */
+/** What flows INTO `.agentsmesh/` in the hero mesh, top to bottom. */
+export const HOME_MESH_INPUTS: readonly string[] = ['existing tool configs', 'community packs'];
+
+/** The stage words on the hero mesh, in the order the flow reads. */
+export const HOME_MESH_STAGES = { in: 'import', out: 'generate', sync: 'in sync ✓' } as const;
+
 /** The return path in the hero mesh: what the tools learn flows back into `.agentsmesh/`. */
 export const HOME_MESH_LOOP: { readonly label: string } = { label: 'lessons' };
 

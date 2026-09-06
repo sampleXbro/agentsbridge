@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { meshLayout, meshReturnLoop } from './mesh-layout.mjs';
+import { meshInlet, meshLayout, meshReturnLoop } from './mesh-layout.mjs';
 
 const box = { width: 400, height: 300 };
 
@@ -80,4 +80,29 @@ test('meshReturnLoop: a single target needs no rail', () => {
 
 test('meshReturnLoop: no targets means no loop', () => {
   assert.equal(meshReturnLoop(meshLayout(0, box), 330), null);
+});
+
+test('meshLayout: an inlet reserves space above the fan and stacks the inputs on the source column', () => {
+  const layout = meshLayout(3, { ...box, inletHeight: 70 }, { inputs: 2 });
+  assert.deepEqual(layout.source, { x: 40, y: 220 });
+  assert.deepEqual(
+    layout.targets.map((t) => t.y),
+    [100, 220, 340],
+  );
+  assert.deepEqual(layout.inputs, [
+    { x: 40, y: 12 },
+    { x: 40, y: 58 },
+  ]);
+});
+
+test('meshLayout: no inputs means no inlet and an unchanged fan', () => {
+  const plain = meshLayout(3, box);
+  assert.deepEqual(plain.inputs, []);
+  assert.deepEqual(meshLayout(3, box, { inputs: 0 }).source, plain.source);
+});
+
+test('meshInlet: one rail from the first input down to the top of the source', () => {
+  const layout = meshLayout(3, { ...box, inletHeight: 70 }, { inputs: 2 });
+  assert.equal(meshInlet(layout, 19), 'M 40 12 L 40 201');
+  assert.equal(meshInlet(meshLayout(3, box), 19), null);
 });

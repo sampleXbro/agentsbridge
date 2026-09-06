@@ -1,24 +1,43 @@
 ---
 /**
- * Animated "one source, many targets" mesh for the hero. Pure SVG + CSS.
- * Two variants share one layout function: `wide` for tablets and up, `compact`
- * for phones, where labels need a larger share of the drawing.
+ * The library's whole flow as one cycle, drawn in pure SVG + CSS:
  *
- * The lessons loop is the return path: a rail through every tool node, a sweep
- * under the fan through the `lessons` node, and a landing back in
- * `.agentsmesh/`, with pulses travelling the opposite way to the fan. It is the
- * one solid-amber element in the drawing, so the eye lands on it second.
+ *   existing configs and packs  ─┐ import
+ *                                ▼
+ *                          .agentsmesh/  ──generate──▶  every tool  (fills when in sync)
+ *                                ▲                          │
+ *                                └────────── lessons ───────┘
+ *
+ * The inlet rail on the left and the lessons rail on the right mirror each
+ * other, so the eye reads in, source, out, back. Two variants share one layout
+ * function: `wide` for tablets and up, `compact` for phones. Pulses reveal on
+ * the SVG animation clock (radius 0 until their motion starts), never from CSS.
  */
-import { meshLayout, meshReturnLoop } from '../../lib/mesh-layout.mjs';
-import { HOME_MESH_LOOP, HOME_MESH_TARGETS } from '../../content/data/home';
+import { meshInlet, meshLayout, meshReturnLoop } from '../../lib/mesh-layout.mjs';
+import {
+  HOME_MESH_INPUTS,
+  HOME_MESH_LOOP,
+  HOME_MESH_STAGES,
+  HOME_MESH_TARGETS,
+} from '../../content/data/home';
 
 interface Props {
   variant?: 'wide' | 'compact';
 }
 
 const VARIANTS = {
-  wide: { geometry: { width: 300, height: 330, padX: 64, padY: 26 }, viewWidth: 520, fontSize: 12.5, lane: 46 },
-  compact: { geometry: { width: 224, height: 290, padX: 64, padY: 22 }, viewWidth: 468, fontSize: 15, lane: 50 },
+  wide: {
+    geometry: { width: 300, height: 330, padX: 64, padY: 26, inletHeight: 72 },
+    viewWidth: 520,
+    fontSize: 12.5,
+    lane: 46,
+  },
+  compact: {
+    geometry: { width: 224, height: 290, padX: 64, padY: 22, inletHeight: 76 },
+    viewWidth: 468,
+    fontSize: 15,
+    lane: 50,
+  },
 } as const;
 
 const SOURCE_HALF_HEIGHT = 19;
@@ -26,20 +45,29 @@ const LOOP_PULSES = [0, 1];
 
 const { variant = 'wide' } = Astro.props;
 const { geometry, viewWidth, fontSize, lane } = VARIANTS[variant];
-const layout = meshLayout(HOME_MESH_TARGETS.length, geometry);
-const { source, targets, edges } = layout;
-const viewHeight = geometry.height + lane;
+const layout = meshLayout(HOME_MESH_TARGETS.length, geometry, { inputs: HOME_MESH_INPUTS.length });
+const { source, targets, edges, inputs } = layout;
+const viewHeight = geometry.inletHeight + geometry.height + lane;
+const inlet = meshInlet(layout, SOURCE_HALF_HEIGHT);
 const loop = meshReturnLoop(layout, viewHeight - 16, SOURCE_HALF_HEIGHT);
 const lastIndex = HOME_MESH_TARGETS.length - 1;
-/**
- * A pulse is a circle of radius 0 until its own SVG animation clock starts, and
- * that clock also drives its motion. Revealing it from CSS instead put every
- * pulse at the SVG origin, visible in the top-left corner, until it began.
- */
-const pulseStart = (i: number): string => `${1.2 + i * 0.4}s`;
-const loopPulseStart = (i: number): string => `${2.6 + i * 2.5}s`;
+const lastInput = inputs[inputs.length - 1];
+const lastTarget = targets[targets.length - 1];
 const pillWidth = Math.round(HOME_MESH_LOOP.label.length * fontSize * 0.62 + 30);
 const titleId = `am-mesh-title-${variant}`;
+/** Pulses are radius 0 until their own SVG clock starts, which also moves them. */
+const inletPulseStart = (i: number): string => `${0.9 + i * 1.3}s`;
+const fanPulseStart = (i: number): string => `${2 + i * 0.35}s`;
+const loopPulseStart = (i: number): string => `${3.6 + i * 2.5}s`;
+/** Stage words: "import" beside the inlet, "generate" above the fan, "in sync" under the tools. */
+const stages = {
+  in: { x: source.x + 12, y: ((lastInput?.y ?? 0) + source.y - SOURCE_HALF_HEIGHT) / 2 + 4 },
+  out: {
+    x: source.x + ((targets[0]?.x ?? 0) - source.x) * 0.62,
+    y: geometry.inletHeight + geometry.padY - 10,
+  },
+  sync: { x: (lastTarget?.x ?? 0) + 14, y: (lastTarget?.y ?? 0) + 22 },
+};
 ---
 
 <svg
@@ -50,9 +78,10 @@ const titleId = `am-mesh-title-${variant}`;
   style={`--am-mesh-font: ${fontSize}px`}
 >
   <title id={titleId}
-    >One .agentsmesh directory generates native config for every AI coding tool, and the lessons learned in
-    those tools flow back into it</title
+    >Existing tool configs and community packs import into one .agentsmesh directory, which generates
+    native config for every AI coding tool, keeps it in sync, and learns lessons that flow back</title
   >
+  {inlet && <path class="am-mesh-inlet" d={inlet} pathLength="1" fill="none" />}
   <g class="am-mesh-edges" fill="none">
     {edges.map((d, i) => <path d={d} pathLength="1" style={`--i: ${i}`} />)}
   </g>
@@ -63,12 +92,24 @@ const titleId = `am-mesh-title-${variant}`;
       </g>
     )
   }
+  {
+    inlet && (
+      <g class="am-mesh-pulses">
+        {inputs.map((_, i) => (
+          <circle r="0">
+            <animate attributeName="r" to="2.5" begin={inletPulseStart(i)} dur="0.3s" fill="freeze" />
+            <animateMotion dur="2.2s" begin={inletPulseStart(i)} repeatCount="indefinite" path={inlet} />
+          </circle>
+        ))}
+      </g>
+    )
+  }
   <g class="am-mesh-pulses">
     {
       edges.map((d, i) => (
         <circle r="0">
-          <animate attributeName="r" to="2.5" begin={pulseStart(i)} dur="0.3s" fill="freeze" />
-          <animateMotion dur="3.2s" begin={pulseStart(i)} repeatCount="indefinite" path={d} />
+          <animate attributeName="r" to="2.5" begin={fanPulseStart(i)} dur="0.3s" fill="freeze" />
+          <animateMotion dur="2.2s" begin={fanPulseStart(i)} repeatCount="indefinite" path={d} />
         </circle>
       ))
     }
@@ -86,6 +127,14 @@ const titleId = `am-mesh-title-${variant}`;
     )
   }
   {
+    inputs.map((p, i) => (
+      <g class="am-mesh-input" style={`--i: ${i}`} transform={`translate(${p.x} ${p.y})`}>
+        <circle r="4.5" />
+        <text x="14" dy="0.35em">{HOME_MESH_INPUTS[i]}</text>
+      </g>
+    ))
+  }
+  {
     targets.map((t, i) => (
       <g
         class:list={['am-mesh-target', { 'am-mesh-target--more': i === lastIndex }]}
@@ -93,6 +142,7 @@ const titleId = `am-mesh-title-${variant}`;
         transform={`translate(${t.x} ${t.y})`}
       >
         <circle r="4.5" />
+        {i !== lastIndex && <circle class="am-mesh-target-core" r="2.75" />}
         <text x="14" dy="0.35em">{HOME_MESH_TARGETS[i]}</text>
       </g>
     ))
@@ -110,6 +160,13 @@ const titleId = `am-mesh-title-${variant}`;
       </g>
     )
   }
+  <text class="am-mesh-stage am-mesh-stage--in" x={stages.in.x} y={stages.in.y}>{HOME_MESH_STAGES.in}</text>
+  <text class="am-mesh-stage am-mesh-stage--out" x={stages.out.x} y={stages.out.y} text-anchor="middle"
+    >{HOME_MESH_STAGES.out}</text
+  >
+  <text class="am-mesh-stage am-mesh-stage--sync" x={stages.sync.x} y={stages.sync.y}
+    >{HOME_MESH_STAGES.sync}</text
+  >
 </svg>
 
 <style>
@@ -122,31 +179,81 @@ const titleId = `am-mesh-title-${variant}`;
     font-size: var(--am-mesh-font);
   }
 
+  /* Structure: the inlet and the fan are quiet grey; only the lessons loop is amber. */
+  .am-mesh-inlet,
   .am-mesh-edges path {
     stroke: var(--sl-color-gray-4);
     stroke-width: 1.25;
     stroke-dasharray: 1;
     stroke-dashoffset: 1;
-    animation: am-mesh-draw 900ms var(--am-ease) forwards;
-    animation-delay: calc(200ms + var(--i) * 90ms);
+    animation: am-mesh-draw 800ms var(--am-ease) forwards;
+  }
+
+  .am-mesh-inlet {
+    animation-delay: 200ms;
+  }
+
+  .am-mesh-edges path {
+    animation-delay: calc(1.1s + var(--i) * 90ms);
   }
 
   .am-mesh-pulses circle {
     fill: var(--am-signal);
   }
 
-  .am-mesh-target {
+  .am-mesh-input,
+  .am-mesh-target,
+  .am-mesh-source,
+  .am-mesh-lesson,
+  .am-mesh-stage {
     opacity: 0;
     animation: am-mesh-fade 500ms var(--am-ease) forwards;
-    animation-delay: calc(600ms + var(--i) * 90ms);
   }
 
+  .am-mesh-input {
+    animation-delay: calc(250ms + var(--i) * 140ms);
+  }
+
+  .am-mesh-source {
+    animation-delay: 650ms;
+  }
+
+  .am-mesh-target {
+    animation-delay: calc(1.4s + var(--i) * 90ms);
+  }
+
+  .am-mesh-lesson {
+    animation-delay: 3s;
+  }
+
+  .am-mesh-stage--in {
+    animation-delay: 550ms;
+  }
+  .am-mesh-stage--out {
+    animation-delay: 1.3s;
+  }
+  .am-mesh-stage--sync {
+    animation-delay: 5s;
+  }
+
+  .am-mesh-input circle,
   .am-mesh-target circle {
     fill: var(--sl-color-black);
     stroke: var(--am-signal);
     stroke-width: 1.5;
   }
 
+  /* A tool dot gains an amber core once its first pulse has landed: written, in sync.
+     Outranks the generic `.am-mesh-target circle` ring rule on fill and stroke. */
+  .am-mesh-target circle.am-mesh-target-core {
+    fill: var(--am-signal);
+    stroke: none;
+    opacity: 0;
+    animation: am-mesh-core 400ms var(--am-ease) forwards;
+    animation-delay: calc(4.2s + var(--i) * 120ms);
+  }
+
+  .am-mesh-input text,
   .am-mesh-target text {
     fill: var(--sl-color-gray-1);
   }
@@ -171,6 +278,13 @@ const titleId = `am-mesh-title-${variant}`;
     font-weight: 600;
   }
 
+  .am-mesh-stage {
+    fill: var(--sl-color-gray-3);
+    font-size: calc(var(--am-mesh-font) * 0.8);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
   /* The lessons loop draws after the fan has settled, then keeps moving. */
   .am-mesh-loop path {
     stroke: var(--am-signal);
@@ -179,18 +293,12 @@ const titleId = `am-mesh-title-${variant}`;
     stroke-dashoffset: 1;
     opacity: 0.9;
     animation: am-mesh-draw 1100ms var(--am-ease) forwards;
-    animation-delay: 1.6s;
+    animation-delay: 2.6s;
   }
 
   .am-mesh-loop-pulses circle {
     fill: var(--sl-color-accent-high);
     filter: drop-shadow(0 0 3px var(--am-signal));
-  }
-
-  .am-mesh-lesson {
-    opacity: 0;
-    animation: am-mesh-fade 500ms var(--am-ease) forwards;
-    animation-delay: 2.1s;
   }
 
   .am-mesh-lesson rect {
@@ -209,7 +317,7 @@ const titleId = `am-mesh-title-${variant}`;
     transform-box: fill-box;
     transform-origin: center;
     animation: am-mesh-ping 2.4s ease-out infinite;
-    animation-delay: 2.6s;
+    animation-delay: 3.6s;
     opacity: 0;
   }
 
@@ -225,6 +333,12 @@ const titleId = `am-mesh-title-${variant}`;
     }
   }
 
+  @keyframes am-mesh-core {
+    to {
+      opacity: 0.9;
+    }
+  }
+
   @keyframes am-mesh-ping {
     0% {
       transform: scale(1);
@@ -237,13 +351,22 @@ const titleId = `am-mesh-title-${variant}`;
   }
 
   @media (prefers-reduced-motion: reduce) {
+    .am-mesh-inlet,
     .am-mesh-edges path,
     .am-mesh-loop path,
+    .am-mesh-input,
     .am-mesh-target,
-    .am-mesh-lesson {
+    .am-mesh-source,
+    .am-mesh-lesson,
+    .am-mesh-stage {
       animation: none;
       stroke-dashoffset: 0;
       opacity: 1;
+    }
+
+    .am-mesh-target circle.am-mesh-target-core {
+      animation: none;
+      opacity: 0.9;
     }
 
     .am-mesh-pulses,

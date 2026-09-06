@@ -28,15 +28,6 @@
           "command": "jq -r '.tool_input.file_path' | xargs eslint --fix"
         }
       ]
-    },
-    {
-      "matcher": "Edit|Write|Bash",
-      "hooks": [
-        {
-          "type": "command",
-          "command": "agentsmesh lessons hook"
-        }
-      ]
     }
   ],
   "UserPromptSubmit": [

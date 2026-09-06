@@ -69,20 +69,29 @@ describe('agentsmesh init --lessons (e2e)', () => {
     expect(lessonsStart).toBeLessThan(body);
   });
 
-  it('auto-wires the PreToolUse (first-touch) + PostToolUse recall hook and generate projects it', async () => {
+  it('auto-wires the PreToolUse recall hook, never PostToolUse, and generate projects it', async () => {
     const init = await runCli('init --lessons', tempDir);
     expect(init.stdout).toContain('recall hook into .agentsmesh/hooks.yaml');
 
     const hooksYaml = readFileSync(join(tempDir, '.agentsmesh/hooks.yaml'), 'utf8');
     const parsed = parseYaml(hooksYaml) as Record<string, Array<{ command?: string }> | undefined>;
     expect((parsed.PreToolUse ?? []).map((h) => h.command)).toContain('agentsmesh lessons hook');
-    expect((parsed.PostToolUse ?? []).map((h) => h.command)).toContain('agentsmesh lessons hook');
+    // PreToolUse fires before every tool call, so a PostToolUse recall only re-ran
+    // after the fact: a second process and context block per call, too late to apply.
+    expect((parsed.PostToolUse ?? []).map((h) => h.command)).not.toContain(
+      'agentsmesh lessons hook',
+    );
     // The managed YAML injection preserved the schema directive.
     expect(hooksYaml).toContain('yaml-language-server');
 
     await runCli('generate --targets claude-code', tempDir);
-    const settings = readFileSync(join(tempDir, '.claude/settings.json'), 'utf8');
-    expect(settings).toContain('agentsmesh lessons hook');
+    const settings = JSON.parse(readFileSync(join(tempDir, '.claude/settings.json'), 'utf8')) as {
+      hooks?: Record<string, unknown>;
+    };
+    const recallEntries = (event: string): number =>
+      JSON.stringify(settings.hooks?.[event] ?? []).split('agentsmesh lessons hook').length - 1;
+    expect(recallEntries('PreToolUse')).toBe(1);
+    expect(recallEntries('PostToolUse')).toBe(0);
   });
 
   it('retrofits lessons onto an already-initialized project', async () => {

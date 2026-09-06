@@ -173,7 +173,7 @@ export function recordRecallTelemetry(
   lessons: readonly RankedLesson[],
   options: { readonly bypassed?: boolean; readonly session?: string } = {},
 ): void {
-  if (!isTelemetryEnabled()) return;
+  if (!isTelemetryEnabled(process.env, projectRoot)) return;
   const byKind = collectMatchedTriggersByKind(graph, query);
   const countVia = (set: Set<string>): number =>
     matches.filter(({ lesson }) => lesson.triggers.some((t) => set.has(t))).length;

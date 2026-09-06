@@ -1,4 +1,12 @@
-import { appendFileSync, existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import {
+  appendFileSync,
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -36,6 +44,43 @@ function record(over: Partial<RecallTelemetryRecord> = {}): RecallTelemetryRecor
     ...over,
   };
 }
+
+describe('isTelemetryEnabled: project config', () => {
+  const writeConfig = (body: string): void => {
+    mkdirSync(join(root, '.agentsmesh', 'lessons'), { recursive: true });
+    writeFileSync(join(root, '.agentsmesh', 'lessons', 'config.json'), body, 'utf8');
+  };
+
+  // A hook spawned by a desktop app inherits none of the user's shell exports, so
+  // an env-only gate left every hook blind while the CLI in a terminal kept logging.
+  it('is on when config.json opts in and the env says nothing', () => {
+    writeConfig('{ "telemetry": true }');
+    expect(isTelemetryEnabled({}, root)).toBe(true);
+  });
+
+  it('stays off without a config, with telemetry false, or with a broken file', () => {
+    expect(isTelemetryEnabled({}, root)).toBe(false);
+    writeConfig('{ "telemetry": false }');
+    expect(isTelemetryEnabled({}, root)).toBe(false);
+    writeConfig('{ not json');
+    expect(isTelemetryEnabled({}, root)).toBe(false);
+    writeConfig('{ "telemetry": "yes" }');
+    expect(isTelemetryEnabled({}, root)).toBe(false);
+  });
+
+  it('lets the env override the config in both directions', () => {
+    writeConfig('{ "telemetry": true }');
+    expect(isTelemetryEnabled({ [TELEMETRY_ENV]: '0' }, root)).toBe(false);
+    writeConfig('{ "telemetry": false }');
+    expect(isTelemetryEnabled({ [TELEMETRY_ENV]: '1' }, root)).toBe(true);
+  });
+
+  it('gates the recall log writer through the config too', () => {
+    writeConfig('{ "telemetry": true }');
+    appendRecallRecord(root, record(), {});
+    expect(readRecallLog(root)).toHaveLength(1);
+  });
+});
 
 describe('isTelemetryEnabled', () => {
   it('is true only when the env flag is exactly "1"', () => {

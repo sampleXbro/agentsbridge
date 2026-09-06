@@ -1,3 +1,4 @@
+import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { appendJsonl, capJsonl, logExists, readJsonl } from './jsonl-log.js';
 import { lessonsPaths } from './paths.js';
@@ -18,9 +19,14 @@ const RECALL_LOG_TRIM_TRIGGER_BYTES = 2_000_000;
  * captures one append-only record per recall so `lessons stats` can answer "is
  * per-action recall token-justified versus loading the whole active set once?".
  *
- * OFF by default: a no-op unless {@link TELEMETRY_ENV} === '1'. Records carry
- * field-PRESENCE booleans only — never the raw file / command / keyword text —
- * so the log stays small and leaks no source content.
+ * OFF by default. Opt in per project with `"telemetry": true` in
+ * `.agentsmesh/lessons/config.json`, or per process with {@link TELEMETRY_ENV}
+ * (`1` forces on, `0` forces off). The config path exists because the hooks are
+ * the most important writer and a hook spawned by a desktop app inherits none of
+ * the user's shell exports: an env-only gate left every hook blind for weeks
+ * while the CLI in a terminal kept logging. Records carry field-PRESENCE
+ * booleans only — never the raw file / command / keyword text — so the log stays
+ * small and leaks no source content.
  */
 
 export const TELEMETRY_ENV = 'AGENTSMESH_LESSONS_TELEMETRY';
@@ -86,8 +92,35 @@ export function recallLogPath(projectRoot: string): string {
   return join(lessonsPaths(projectRoot).base, 'recall-log.jsonl');
 }
 
-export function isTelemetryEnabled(env: NodeJS.ProcessEnv = process.env): boolean {
-  return env[TELEMETRY_ENV] === '1';
+/** True when the project's lessons config opts in. Never throws: a broken file is "off". */
+function configTelemetry(projectRoot: string): boolean {
+  const path = lessonsPaths(projectRoot).config;
+  if (!existsSync(path)) return false;
+  try {
+    const parsed: unknown = JSON.parse(readFileSync(path, 'utf8'));
+    return (
+      typeof parsed === 'object' &&
+      parsed !== null &&
+      (parsed as Record<string, unknown>).telemetry === true
+    );
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * The env var wins in both directions (`1` on, `0` off); otherwise the project
+ * config decides when a root is known. Writers pass their project root so a
+ * hook process with an empty environment still honours the project's opt-in.
+ */
+export function isTelemetryEnabled(
+  env: NodeJS.ProcessEnv = process.env,
+  projectRoot?: string,
+): boolean {
+  const raw = env[TELEMETRY_ENV];
+  if (raw === '1') return true;
+  if (raw === '0') return false;
+  return projectRoot !== undefined && configTelemetry(projectRoot);
 }
 
 /**
@@ -99,7 +132,7 @@ export function appendRecallRecord(
   record: RecallTelemetryRecord,
   env: NodeJS.ProcessEnv = process.env,
 ): void {
-  if (!isTelemetryEnabled(env)) return;
+  if (!isTelemetryEnabled(env, projectRoot)) return;
   appendJsonl(recallLogPath(projectRoot), record, {
     maxRecords: MAX_RECALL_LOG_RECORDS,
     trimTriggerBytes: RECALL_LOG_TRIM_TRIGGER_BYTES,

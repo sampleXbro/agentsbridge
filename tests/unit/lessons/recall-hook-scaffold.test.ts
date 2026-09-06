@@ -30,7 +30,7 @@ function eventCommands(event: Ev): string[] {
 }
 
 describe('injectRecallHook', () => {
-  it('adds PreToolUse + PostToolUse + UserPromptSubmit recall hooks, preserving directive + comments', () => {
+  it('adds PreToolUse + UserPromptSubmit recall hooks (never PostToolUse), preserving directive + comments', () => {
     writeFileSync(
       hooksPath(),
       '# yaml-language-server: $schema=./schema.json\n# Lifecycle hooks — example\n',
@@ -41,7 +41,10 @@ describe('injectRecallHook', () => {
     expect(text).toContain('# yaml-language-server: $schema=./schema.json');
     expect(text).toContain('# Lifecycle hooks — example');
     expect(eventCommands('PreToolUse')).toContain(RECALL_HOOK_COMMAND);
-    expect(eventCommands('PostToolUse')).toContain(RECALL_HOOK_COMMAND);
+    // PreToolUse fires before EVERY tool call, so a PostToolUse recall for the same
+    // action only re-ran recall after the fact — a second process and a second
+    // context block per tool call, with advice that arrived too late to apply.
+    expect(eventCommands('PostToolUse')).not.toContain(RECALL_HOOK_COMMAND);
     // UserPromptSubmit carries the task text — the only event that can recall
     // keyword/conceptual lessons against task intent. It has no tool matcher.
     expect(eventCommands('UserPromptSubmit')).toContain(RECALL_HOOK_COMMAND);
@@ -63,7 +66,6 @@ describe('injectRecallHook', () => {
     expect(injectRecallHook(root)).toBe(false);
     expect(readFileSync(hooksPath(), 'utf8')).toBe(after1);
     expect(eventCommands('PreToolUse').filter((c) => c === RECALL_HOOK_COMMAND)).toHaveLength(1);
-    expect(eventCommands('PostToolUse').filter((c) => c === RECALL_HOOK_COMMAND)).toHaveLength(1);
     expect(eventCommands('UserPromptSubmit').filter((c) => c === RECALL_HOOK_COMMAND)).toHaveLength(
       1,
     );
@@ -80,11 +82,64 @@ describe('injectRecallHook', () => {
       'utf8',
     );
     expect(injectRecallHook(root)).toBe(true);
-    expect(eventCommands('PostToolUse')).toEqual(['npm run lint', RECALL_HOOK_COMMAND]);
+    expect(eventCommands('PostToolUse')).toEqual(['npm run lint']);
     expect(eventCommands('PreToolUse')).toEqual([RECALL_HOOK_COMMAND]);
     expect(eventCommands('UserPromptSubmit')).toEqual([RECALL_HOOK_COMMAND]);
     expect(eventCommands('PostToolUseFailure')).toEqual([RECALL_HOOK_COMMAND]);
     expect(eventCommands('SessionStart')).toEqual([RECALL_HOOK_COMMAND]);
+  });
+
+  it("removes a previously scaffolded PostToolUse recall entry but keeps the user's own hooks there", () => {
+    writeFileSync(
+      hooksPath(),
+      [
+        'PreToolUse:',
+        '  - matcher: Edit|Write|Bash',
+        '    type: command',
+        `    command: ${RECALL_HOOK_COMMAND}`,
+        'PostToolUse:',
+        '  - matcher: Edit',
+        '    type: command',
+        '    command: npm run lint',
+        '  - matcher: Edit|Write|Bash',
+        '    type: command',
+        `    command: ${RECALL_HOOK_COMMAND}`,
+        'UserPromptSubmit:',
+        '  - matcher: "*"',
+        '    type: command',
+        `    command: ${RECALL_HOOK_COMMAND}`,
+        'PostToolUseFailure:',
+        '  - matcher: "*"',
+        '    type: command',
+        `    command: ${RECALL_HOOK_COMMAND}`,
+        'SessionStart:',
+        '  - matcher: "*"',
+        '    type: command',
+        `    command: ${RECALL_HOOK_COMMAND}`,
+        '',
+      ].join('\n'),
+      'utf8',
+    );
+    expect(injectRecallHook(root)).toBe(true);
+    expect(eventCommands('PostToolUse')).toEqual(['npm run lint']);
+    expect(eventCommands('PreToolUse')).toEqual([RECALL_HOOK_COMMAND]);
+    expect(injectRecallHook(root)).toBe(false);
+  });
+
+  it('drops the PostToolUse key entirely when the recall entry was its only hook', () => {
+    writeFileSync(
+      hooksPath(),
+      `PostToolUse:\n  - matcher: Edit|Write|Bash\n    type: command\n    command: ${RECALL_HOOK_COMMAND}\n`,
+      'utf8',
+    );
+    expect(injectRecallHook(root)).toBe(true);
+    // Parsed keys, not raw text: the scaffold also writes PostToolUseFailure.
+    const keys = Object.keys(
+      parseYaml(readFileSync(hooksPath(), 'utf8')) as Record<string, unknown>,
+    );
+    expect(keys).not.toContain('PostToolUse');
+    expect(keys).toContain('PostToolUseFailure');
+    expect(eventCommands('PreToolUse')).toEqual([RECALL_HOOK_COMMAND]);
   });
 
   it('does not create hooks.yaml when absent — only injects into an existing file', () => {

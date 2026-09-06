@@ -191,6 +191,7 @@ describe('scaffoldLessons', async () => {
       recallMaxTokens: 400,
       autoPrune: false,
       repairTriggers: false,
+      telemetry: false,
     });
   });
 

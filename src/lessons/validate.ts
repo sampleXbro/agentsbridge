@@ -29,6 +29,8 @@ export interface ValidationFinding {
   readonly code: string;
   readonly message: string;
   readonly lessonId?: string;
+  /** Every lesson one aggregate finding covers (machine-readable; the message names a few). */
+  readonly lessonIds?: readonly string[];
   readonly topicId?: string;
   readonly triggerId?: string;
 }

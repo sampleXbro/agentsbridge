@@ -8738,6 +8738,35 @@
         "t-kw-2df7a7e6"
       ]
     },
+    "website-svg-after-editing-an-astro-component": {
+      "createdAt": "2026-09-06",
+      "evidence": [
+        "fdf2bd30"
+      ],
+      "rule": "After editing an Astro component's <style>, verify visuals against the production build (astro build, then serve dist) rather than the running dev server: astro dev can keep serving a stale scoped-style module for that component, so a tab shows the new markup under the old CSS (63 accumulated stylesheets in one tab), and a cache-ignoring reload does not fix it. Restart the dev server if a dev-only route (the social card) must be captured.",
+      "status": "active",
+      "topics": [
+        "website-svg"
+      ],
+      "triggers": [
+        "t-glob-ddc2ae20",
+        "t-cmd-e243ffa3"
+      ]
+    },
+    "website-svg-never-animate-an-svg-fill": {
+      "createdAt": "2026-09-06",
+      "evidence": [
+        "fdf2bd30"
+      ],
+      "rule": "Never animate an SVG fill to a color-mix() value in a CSS keyframe: Chrome resolves the variable but lands on near-black (rgb(1,0,0)) with the animation reported finished. To fill a node on cue, overlay a second shape in the target color and animate its opacity, and give that shape's selector more specificity than any generic sibling rule (`.group circle` beats `.core` on fill).",
+      "status": "active",
+      "topics": [
+        "website-svg"
+      ],
+      "triggers": [
+        "t-glob-ddc2ae20"
+      ]
+    },
     "website-svg-reveal-an-animatemotion-driven-svg": {
       "createdAt": "2026-09-05",
       "evidence": [
@@ -9761,6 +9790,10 @@
     "t-cmd-e097d363": {
       "kind": "command_pattern",
       "pattern": "cli\\.js install\\b"
+    },
+    "t-cmd-e243ffa3": {
+      "kind": "command_pattern",
+      "pattern": "astro (dev|preview)"
     },
     "t-cmd-e39c134d": {
       "kind": "command_pattern",

@@ -100,13 +100,12 @@
         "lesson-id"
       ],
       "rule": "When spawning a subagent with fork_context=true, omit agent_type, model, and reasoning_effort because the full-history fork inherits them.",
-      "status": "active",
+      "status": "superseded",
+      "supersededBy": "subagent-delegation-when-spawning-a-full-history",
       "topics": [
         "agent-orchestration"
       ],
-      "triggers": [
-        "t-kw-6829f894"
-      ]
+      "triggers": []
     },
     "agent-orchestration-when-spawning-review-audit-verify": {
       "createdAt": "2026-07-04",
@@ -291,14 +290,12 @@
         "commit:25f84e94"
       ],
       "rule": "`pnpm capabilities:verify` exits non-zero BY DESIGN — it is a backlog tracker for native/embedded cells that still lack `capability-ledger.json` provenance (hundreds are intentionally un-researched: global scope, directory features, extensionless/unstructured files). Do NOT wire it into CI as a hard gate and do NOT try to drive its \"missing\" count to zero wholesale. The enforced CI gate is the conformance test `tests/contract/capability-ledger-conformance.test.ts` (runs under `pnpm test`), which fails only when a SEEDED native/embedded cell's generated output drifts from its recorded ext/format/fingerprint, plus the ledger-integrity assertion (no orphan/invalid/duplicate cells).",
-      "status": "active",
+      "status": "deprecated",
       "topics": [
         "capability-ledger"
       ],
       "triggers": [
-        "t-glob-1120a27d",
-        "t-cmd-33ca9506",
-        "t-kw-8d854c5e"
+        "t-glob-1120a27d"
       ]
     },
     "capability-ledger-when-a-target-s-mergegeneratedoutputcont": {
@@ -686,13 +683,13 @@
       "createdAt": "2026-06-23",
       "evidence": [],
       "rule": "A clack (@clack/prompts) spinner owns its terminal line — ANY stdout written while it is active corrupts the layout (the next block's first line concatenates onto the spinner line, e.g. the matrix header shifting after \"Generating…\"). Never wrap a call that prints DURING its run in a spinner: `generate` renders the compatibility matrix mid-run via `printMatrix`, so pass `printMatrix: false` and render the matrix AFTER `sp.stop()`/`ui.outro()`. Commands whose runX is silent (output only via the renderer, which runs after) are spinner-safe — verified install/refresh/import/convert/uninstall have 0 direct output calls during their run.",
-      "status": "active",
+      "status": "superseded",
+      "supersededBy": "cli-presentation-a-clack-spinner-and-an",
       "topics": [
         "cli-presentation"
       ],
       "triggers": [
-        "t-glob-8173701c",
-        "t-kw-3bb206ca"
+        "t-glob-8173701c"
       ]
     },
     "cli-presentation-a-clack-spinner-and-an": {
@@ -1093,6 +1090,20 @@
         "t-kw-364764c2"
       ]
     },
+    "fixture-and-assertion-discipline-before-calling-a-shared-test": {
+      "createdAt": "2026-09-06",
+      "evidence": [
+        "fixture-and-assertion-discipline-rule-12"
+      ],
+      "rule": "Before calling a shared test helper, read its parameter types in tests/helpers; never invent an option shape from memory (a past `{ exactPath }` did not exist). A wrong shape only passes typecheck when the helper's parameter is loosely typed, and then it silently matches nothing, so the test goes green for the wrong reason.",
+      "status": "active",
+      "topics": [
+        "fixture-and-assertion-discipline"
+      ],
+      "triggers": [
+        "t-glob-aa8ef603"
+      ]
+    },
     "fixture-and-assertion-discipline-in-path-equality-endswith-test": {
       "createdAt": "2026-07-07",
       "evidence": [
@@ -1128,14 +1139,12 @@
         "lesson:fixture-and-assertion-discipline-opencode-mergeopencodesettings-delegates"
       ],
       "rule": "opencode declares additionalRules/mcp/permissions native but is broken: (1) generated .opencode/rules/*.md are inert because OpenCode does NOT auto-read .opencode/rules/ — additional instruction files must be listed in the opencode.json `instructions` array (which agentsmesh never emits); (2) mergeOpenCodeSettings delegates to core mergeSettingsJson (Claude schema, only carries `permissions`/`hooks`), so regenerating over an existing opencode.json silently DROPS the freshly-generated `mcp` and `permission` keys. Fix needs an opencode-specific merger overlaying mcp/permission/instructions, plus emitting an `instructions` glob for .opencode/rules.",
-      "status": "active",
+      "status": "superseded",
+      "supersededBy": "target-capability-expansion-for-opencode-targets-additionalrules-emi",
       "topics": [
         "fixture-and-assertion-discipline"
       ],
-      "triggers": [
-        "t-glob-f8afe7f1",
-        "t-kw-9cc52861"
-      ]
+      "triggers": []
     },
     "fixture-and-assertion-discipline-opencode-mergeopencodesettings-delegates": {
       "createdAt": "2026-06-15",
@@ -1143,13 +1152,11 @@
         "tests/unit/targets/opencode/scoped-settings.test.ts"
       ],
       "rule": "opencode mergeOpenCodeSettings delegates to core mergeSettingsJson, which uses the Claude schema and only carries incoming permissions and hooks; it does NOT copy opencode-specific permission or mcp keys from newContent. When asserting the merge-base-present branch, expect base keys preserved and incoming permissions/hooks merged, not an opencode permission key.",
-      "status": "active",
+      "status": "deprecated",
       "topics": [
         "fixture-and-assertion-discipline"
       ],
-      "triggers": [
-        "t-glob-f8afe7f1"
-      ]
+      "triggers": []
     },
     "fixture-and-assertion-discipline-rule-1": {
       "createdAt": "2026-06-05",
@@ -1220,7 +1227,8 @@
         "legacy:.agentsmesh/lessons/topics/global-mode.md#rule-14"
       ],
       "rule": "Use the correct shape for test helpers: `findGeneratedFile` accepts either a plain string for exact path matching or `{ stringContaining }`/`{ stringMatching }` — `{ exactPath }` does not exist. Check the helper's actual parameter types before use.",
-      "status": "active",
+      "status": "superseded",
+      "supersededBy": "fixture-and-assertion-discipline-before-calling-a-shared-test",
       "topics": [
         "fixture-and-assertion-discipline",
         "global-mode"
@@ -2754,7 +2762,7 @@
       ],
       "rule": "For `findGeneratedFile` in global structure tests, pass a plain string for exact path matching or an object with `stringContaining`/`stringMatching`. Never invent `{ exactPath: '...' }` — check the actual signature first.",
       "status": "superseded",
-      "supersededBy": "fixture-and-assertion-discipline-rule-12",
+      "supersededBy": "fixture-and-assertion-discipline-before-calling-a-shared-test",
       "topics": [
         "global-mode"
       ],
@@ -3795,13 +3803,13 @@
         "947735da"
       ],
       "rule": "A keyword trigger fires ONLY when its full pattern is a substring of an explicit --keyword, OR its tokens appear as a CONTIGUOUS run inside the --file/--cmd tokens (keyword-match.ts: keywordMatches). Therefore a long descriptive keyword pattern (8+ tokens, e.g. 'antd Form.useForm getFieldsValue Select filterOption FormData generic cast') is effectively DEAD: it is never a substring of a realistic --keyword and never appears contiguously in a file path, so the lesson is reachable only via its file_glob. Author keyword triggers as SHORT distinctive runs (2-4 tokens, e.g. 'filterOption cast'). Proven empirically: long pattern returns (no matches) on a sibling file even with an on-topic --keyword; the short pattern matches.",
-      "status": "active",
+      "status": "superseded",
+      "supersededBy": "lessons-system-keyword-match-s-derived-haystack",
       "topics": [
         "lessons-system"
       ],
       "triggers": [
-        "t-glob-7a175889",
-        "t-kw-ebee7e76"
+        "t-glob-7a175889"
       ]
     },
     "lessons-system-a-non-backtracking-matcher-used": {
@@ -5105,14 +5113,12 @@
       "createdAt": "2026-06-08",
       "evidence": [],
       "rule": "Run the test suite with AGENTSMESH_LESSONS_TELEMETRY unset (e.g. 'env -u AGENTSMESH_LESSONS_TELEMETRY npx vitest'); a shell exporting it =1 makes lessons-stats tests that assert telemetryEnabled=false fail spuriously, since telemetry-enabled is read from the live process env.",
-      "status": "active",
+      "status": "superseded",
+      "supersededBy": "verification-workflow-tests-for-env-gated-features-2",
       "topics": [
         "lessons-telemetry"
       ],
-      "triggers": [
-        "t-glob-41741571",
-        "t-kw-05e1d9a7"
-      ]
+      "triggers": []
     },
     "lessons-telemetry-when-an-env-gated-agentsmesh": {
       "createdAt": "2026-06-08",
@@ -8257,11 +8263,27 @@
         "t-kw-75645732"
       ]
     },
+    "verification-workflow-the-coverage-gate-has-two": {
+      "createdAt": "2026-09-06",
+      "evidence": [
+        "7d8b623c"
+      ],
+      "rule": "The coverage gate has two tiers: the aggregate 95/95/95 thresholds in vitest.config.ts AND a per-file floor of 80% lines, 80% functions, 70% branches enforced by scripts/coverage-floor.ts after the run (pnpm test:coverage). A single file below the floor fails the gate even when the aggregate passes. v8 still counts defensive `?? fallback` guards on regex match groups as unreachable branches, so when a file trips the floor, add direct tests for its real branches; never add non-null assertions, v8-ignore comments, or contrived tests to juice a percentage.",
+      "status": "active",
+      "topics": [
+        "verification-workflow"
+      ],
+      "triggers": [
+        "t-glob-8ade9a3e",
+        "t-glob-a948ade3"
+      ]
+    },
     "verification-workflow-the-coverage-gate-is-global": {
       "createdAt": "2026-06-18",
       "evidence": [],
       "rule": "The coverage gate is GLOBAL (vitest.config thresholds over the included set), not per-file. v8 counts the right-hand operand of defensive `?? fallback` / `=== undefined` guards on regex match groups (forced by noUncheckedIndexedAccess: match.index, match[n], match.indices[n]) as branches that are UNREACHABLE at runtime. When raising branch coverage, cover the reachable logic and rely on the global threshold — do NOT add ! non-null assertions (lint-forbidden), v8-ignore comments (the repo uses none), or contrived tests to juice an individual file's branch %.",
-      "status": "active",
+      "status": "superseded",
+      "supersededBy": "verification-workflow-the-coverage-gate-has-two",
       "topics": [
         "verification-workflow"
       ],
@@ -8411,7 +8433,8 @@
         "legacy:L53"
       ],
       "rule": "Keep e2e CLI helper timeouts (e.g. `runCli` 30s) high enough for full-suite parallel pressure; reproduce timeout-looking failures both targeted and under the full runner before treating them as product behavior failures.",
-      "status": "active",
+      "status": "superseded",
+      "supersededBy": "dist-backed-tests-rule-5",
       "topics": [
         "watch-and-test-timing"
       ],
@@ -9460,10 +9483,6 @@
       "kind": "command_pattern",
       "pattern": "sed.*SKILL.md"
     },
-    "t-cmd-33ca9506": {
-      "kind": "command_pattern",
-      "pattern": "capabilities:verify"
-    },
     "t-cmd-34d713b6": {
       "kind": "command_pattern",
       "pattern": "install --sync"
@@ -10092,10 +10111,6 @@
       "kind": "file_glob",
       "pattern": "website/package.json"
     },
-    "t-glob-41741571": {
-      "kind": "file_glob",
-      "pattern": "tests/**/lessons-stats*.test.ts"
-    },
     "t-glob-41b0a32c": {
       "kind": "file_glob",
       "pattern": "vitest.config*"
@@ -10576,6 +10591,10 @@
       "kind": "file_glob",
       "pattern": "src/targets/goose/**"
     },
+    "t-glob-aa8ef603": {
+      "kind": "file_glob",
+      "pattern": "tests/helpers/**/*.ts"
+    },
     "t-glob-aacd9271": {
       "kind": "file_glob",
       "pattern": "tests/**/watch*.test.ts"
@@ -10876,10 +10895,6 @@
       "kind": "file_glob",
       "pattern": "src/targets/continue/hooks.ts"
     },
-    "t-glob-f8afe7f1": {
-      "kind": "file_glob",
-      "pattern": "src/targets/opencode/scoped-settings.ts"
-    },
     "t-glob-f9578eb1": {
       "kind": "file_glob",
       "pattern": "src/utils/filesystem/rename-retry.ts"
@@ -10931,10 +10946,6 @@
     "t-kw-057477d3": {
       "kind": "keyword",
       "pattern": "target output format blast radius tests"
-    },
-    "t-kw-05e1d9a7": {
-      "kind": "keyword",
-      "pattern": "AGENTSMESH_LESSONS_TELEMETRY telemetry test"
     },
     "t-kw-05eaa965": {
       "kind": "keyword",
@@ -11136,10 +11147,6 @@
       "kind": "keyword",
       "pattern": "subagent schema"
     },
-    "t-kw-3bb206ca": {
-      "kind": "keyword",
-      "pattern": "clack spinner"
-    },
     "t-kw-3bbc3d7f": {
       "kind": "keyword",
       "pattern": "permission merge revoke grant"
@@ -11292,10 +11299,6 @@
       "kind": "keyword",
       "pattern": "zsh separator echo equals"
     },
-    "t-kw-6829f894": {
-      "kind": "keyword",
-      "pattern": "fork_context"
-    },
     "t-kw-6b0a8413": {
       "kind": "keyword",
       "pattern": "permission regex allowlist denylist round-trip"
@@ -11428,10 +11431,6 @@
       "kind": "keyword",
       "pattern": "consolidation proposal"
     },
-    "t-kw-8d854c5e": {
-      "kind": "keyword",
-      "pattern": "capabilities verify ledger CI gate"
-    },
     "t-kw-90b1f143": {
       "kind": "keyword",
       "pattern": "lessons efficiency"
@@ -11471,10 +11470,6 @@
     "t-kw-9a36f4fd": {
       "kind": "keyword",
       "pattern": "topLevelKeys fingerprint ledger"
-    },
-    "t-kw-9cc52861": {
-      "kind": "keyword",
-      "pattern": "opencode instructions mcp permission clobber additionalRules"
     },
     "t-kw-a03e44b6": {
       "kind": "keyword",
@@ -11727,10 +11722,6 @@
     "t-kw-e9de15ff": {
       "kind": "keyword",
       "pattern": "preserve-caught-error"
-    },
-    "t-kw-ebee7e76": {
-      "kind": "keyword",
-      "pattern": "keyword trigger length dead"
     },
     "t-kw-ec5d186a": {
       "kind": "keyword",

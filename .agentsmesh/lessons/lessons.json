@@ -5086,6 +5086,21 @@
         "t-cmd-3ef57d47"
       ]
     },
+    "lessons-telemetry-gate-opt-in-telemetry-or": {
+      "createdAt": "2026-09-06",
+      "evidence": [
+        "91d91075"
+      ],
+      "rule": "Gate opt-in telemetry or any hook-side behaviour on a project config file, never only on an environment variable: a hook spawned by a desktop app inherits none of the user's shell exports, so an env-only gate leaves every hook silent while the same command in a terminal works, and the gap is invisible until a log's last timestamp is checked.",
+      "status": "active",
+      "topics": [
+        "lessons-telemetry"
+      ],
+      "triggers": [
+        "t-glob-0571e0f3",
+        "t-glob-c88404c0"
+      ]
+    },
     "lessons-telemetry-run-the-test-suite-with": {
       "createdAt": "2026-06-08",
       "evidence": [],
